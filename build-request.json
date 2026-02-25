@@ -1,0 +1,42 @@
+{
+  "kind": "build_request",
+  "title": "Fix SevaMitra App Download Link",
+  "projectName": "DKAN SevaMitra",
+  "priority": "high",
+  "requirements": [
+    {
+      "id": "REQ-2",
+      "text": "Fix the SevaMitra app download link/button so that users can successfully download or be redirected to the SevaMitra app. Inspect the SevaMitraBadge component and any other places where the SevaMitra download link appears (Hero, Footer, inline badge variants) and ensure the URL is correct, the link opens properly, and the button/badge is functional and clickable.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-6"
+        ],
+        "quotes": [
+          "अब सेवामित्र ऐप डौनलोड नही हो रहा है क्र्पया इसे सही करे"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Clicking the SevaMitra app download badge/button in the Hero section opens a valid, working download or store link.",
+        "Clicking the SevaMitra app download badge/button in the Footer section opens a valid, working download or store link.",
+        "The SevaMitra inline badge variant also links correctly.",
+        "The link does not result in a 404, broken page, or no-action outcome.",
+        "The download link/button is visible and clearly tappable on both desktop and mobile viewports."
+      ]
+    }
+  ],
+  "constraints": [
+    "Do not modify files under frontend/src/hooks/ (immutable paths).",
+    "Do not modify frontend/src/components/ui/ (immutable paths).",
+    "Do not alter the overall site design or layout beyond fixing the download link."
+  ],
+  "nonGoals": [
+    "Changing the visual design of the SevaMitra badge.",
+    "Adding a new download page or route.",
+    "Backend changes."
+  ],
+  "imageRequirements": {
+    "required": [],
+    "edits": []
+  }
+}

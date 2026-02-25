@@ -1,0 +1,25 @@
+{
+  "schemaVersion": "1.0.0",
+  "projectStateVersion": 3,
+  "summary": "SevaMitra app - fixing download issue reported by user",
+  "architectural_notes": [],
+  "known_issues": [
+    "App download not working - user reported SevaMitra app cannot be downloaded"
+  ],
+  "isFixRequest": true,
+  "existing_features": [
+    {
+      "id": "feature-fix-the-sevamitra-app-download-link-button-so-that-users-can-successfully-download-or-be-redirected-to-the-sevamitra-app-inspect-the-sevamitrabadge-component-and-any-other-places-where-the-sevamitra-download-link-appears-hero-footer-inline-badge-variants-and-ensure-the-url-is-correct-the-link-opens-properly-and-the-button-badge-is-functional-and-clickable",
+      "title": "Fix the SevaMitra app download link/button so that users can successfully download or be redirected to the SevaMitra app. Inspect the SevaMitraBadge component and any other places where the SevaMitra download link appears (Hero, Footer, inline badge variants) and ensure the URL is correct, the link opens properly, and the button/badge is functional and clickable.",
+      "reqIds": [
+        "REQ-2"
+      ],
+      "version": 1
+    }
+  ],
+  "new_feature_requests": [],
+  "gameProjectType": "none",
+  "projectName": "SevaMitra",
+  "clarification_mode": "instant",
+  "clarification_rounds": 0
+}

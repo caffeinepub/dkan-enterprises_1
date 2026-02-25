@@ -1,0 +1,147 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&family=Noto+Sans+Devanagari:wght@400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --radius: 0.5rem;
+
+    /* DKAN Blue-Green Theme */
+    --background: 0.97 0.005 220;
+    --foreground: 0.12 0.03 240;
+
+    --card: 1 0 0;
+    --card-foreground: 0.12 0.03 240;
+
+    --popover: 1 0 0;
+    --popover-foreground: 0.12 0.03 240;
+
+    --primary: 0.55 0.18 160;
+    --primary-foreground: 1 0 0;
+
+    --secondary: 0.92 0.03 220;
+    --secondary-foreground: 0.12 0.03 240;
+
+    --muted: 0.93 0.02 220;
+    --muted-foreground: 0.40 0.05 230;
+
+    --accent: 0.75 0.2 155;
+    --accent-foreground: 0.08 0.02 240;
+
+    --destructive: 0.577 0.245 27.325;
+    --destructive-foreground: 0.985 0 0;
+
+    --border: 0.85 0.02 220;
+    --input: 0.85 0.02 220;
+    --ring: 0.55 0.18 160;
+
+    --chart-1: 0.55 0.18 160;
+    --chart-2: 0.35 0.12 240;
+    --chart-3: 0.65 0.15 180;
+    --chart-4: 0.75 0.2 155;
+    --chart-5: 0.45 0.15 200;
+
+    --sidebar: 0.12 0.04 240;
+    --sidebar-foreground: 0.95 0.01 220;
+    --sidebar-primary: 0.75 0.22 155;
+    --sidebar-primary-foreground: 0.1 0.02 240;
+    --sidebar-accent: 0.2 0.05 240;
+    --sidebar-accent-foreground: 0.95 0.01 220;
+    --sidebar-border: 0.25 0.05 240;
+    --sidebar-ring: 0.55 0.18 160;
+
+    /* Custom brand tokens */
+    --navy: 0.12 0.06 245;
+    --navy-dark: 0.08 0.05 245;
+    --navy-mid: 0.18 0.06 245;
+    --electric-green: 0.88 0.22 155;
+    --electric-green-dark: 0.72 0.2 155;
+    --teal: 0.55 0.15 195;
+  }
+
+  .dark {
+    --background: 0.1 0.04 240;
+    --foreground: 0.97 0.01 220;
+    --card: 0.15 0.04 240;
+    --card-foreground: 0.97 0.01 220;
+    --popover: 0.18 0.04 240;
+    --popover-foreground: 0.97 0.01 220;
+    --primary: 0.88 0.22 155;
+    --primary-foreground: 0.08 0.02 240;
+    --secondary: 0.2 0.05 240;
+    --secondary-foreground: 0.97 0.01 220;
+    --muted: 0.2 0.05 240;
+    --muted-foreground: 0.70 0.04 230;
+    --accent: 0.55 0.18 160;
+    --accent-foreground: 0.97 0.01 220;
+    --destructive: 0.704 0.191 22.216;
+    --destructive-foreground: 0.205 0 0;
+    --border: 0.28 0.05 240;
+    --input: 0.28 0.05 240;
+    --ring: 0.88 0.22 155;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Poppins', 'Noto Sans Devanagari', system-ui, sans-serif;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+@layer utilities {
+  .font-hindi {
+    font-family: 'Noto Sans Devanagari', 'Poppins', system-ui, sans-serif;
+  }
+
+  .text-gradient-green {
+    background: linear-gradient(135deg, oklch(0.88 0.22 155), oklch(0.68 0.18 195));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .bg-navy {
+    background-color: oklch(0.12 0.06 245);
+  }
+
+  .bg-navy-dark {
+    background-color: oklch(0.08 0.05 245);
+  }
+
+  .bg-navy-mid {
+    background-color: oklch(0.18 0.06 245);
+  }
+
+  .text-electric-green {
+    color: oklch(0.88 0.22 155);
+  }
+
+  .bg-electric-green {
+    background-color: oklch(0.88 0.22 155);
+  }
+
+  .border-electric-green {
+    border-color: oklch(0.88 0.22 155);
+  }
+
+  .hover\:bg-electric-green-dark:hover {
+    background-color: oklch(0.72 0.2 155);
+  }
+
+  .section-padding {
+    @apply py-16 px-4 md:px-8 lg:px-16;
+  }
+
+  .card-hover {
+    @apply transition-all duration-300 hover:shadow-xl hover:-translate-y-1;
+  }
+}

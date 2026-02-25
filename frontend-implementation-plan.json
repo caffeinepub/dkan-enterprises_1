@@ -1,0 +1,35 @@
+{
+  "kind": "implementation_plan",
+  "version": "1.0",
+  "title": "Fix SevaMitra App Download Link",
+  "requirements": [
+    {
+      "id": "REQ-2",
+      "summary": "Fix the SevaMitra app download link/button across all instances (Hero, Footer, inline badge variants) to ensure users can successfully download or be redirected to the SevaMitra app with a correct, working URL",
+      "acceptanceCriteria": [
+        "Clicking the SevaMitra app download badge/button in the Hero section opens a valid, working download or store link.",
+        "Clicking the SevaMitra app download badge/button in the Footer section opens a valid, working download or store link.",
+        "The SevaMitra inline badge variant also links correctly.",
+        "The link does not result in a 404, broken page, or no-action outcome.",
+        "The download link/button is visible and clearly tappable on both desktop and mobile viewports."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/SevaMitraBadge.tsx",
+          "operation": "modify",
+          "description": "Update the SevaMitra badge component to use a correct, working download URL for the UP SevaMitra app. Replace any placeholder or broken URL with a valid link to the official SevaMitra app download page or store listing (Google Play Store or Apple App Store). Ensure the anchor tag has proper target='_blank' and rel='noopener noreferrer' attributes for external links. Verify the href is not empty, null, or pointing to a non-existent resource. The component is already used in Hero, Footer, and inline contexts, so this single fix will apply to all three variants."
+        },
+        {
+          "path": "frontend/src/components/Hero.tsx",
+          "operation": "modify",
+          "description": "Verify that the SevaMitraBadge component is rendered with the 'hero' variant and confirm it is visible and properly styled for desktop and mobile viewports. Ensure no CSS or layout issues prevent the badge from being clickable. No URL changes are needed here since the badge component handles the link."
+        },
+        {
+          "path": "frontend/src/components/Footer.tsx",
+          "operation": "modify",
+          "description": "Verify that the SevaMitraBadge component is rendered with the 'footer' variant and confirm it is visible and properly styled for desktop and mobile viewports. Ensure no CSS or layout issues prevent the badge from being clickable. No URL changes are needed here since the badge component handles the link."
+        }
+      ]
+    }
+  ]
+}

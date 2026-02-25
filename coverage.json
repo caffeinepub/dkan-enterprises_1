@@ -1,0 +1,39 @@
+{
+  "kind": "coverage_report",
+  "version": "1.0",
+  "generatedAt": "2026-02-25T19:42:36.188Z",
+  "sources": {
+    "buildRequest": true,
+    "implementationPlan": true
+  },
+  "requirements": {
+    "total": 1,
+    "implemented": 1,
+    "items": [
+      {
+        "id": "REQ-2",
+        "summary": "Fix the SevaMitra app download link/button so that users can successfully download or be redirected to the SevaMitra app. Inspect the SevaMitraBadge component and any other places where the SevaMitra download link appears (Hero, Footer, inline badge variants) and ensure the URL is correct, the link opens properly, and the button/badge is functional and clickable.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/components/SevaMitraBadge.tsx",
+          "frontend/src/components/Hero.tsx",
+          "frontend/src/components/Footer.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/components/SevaMitraBadge.tsx"
+        ]
+      }
+    ]
+  },
+  "changedFiles": [
+    "build-request.json",
+    "feature_evidence.json",
+    "frontend-file-summaries.txt",
+    "frontend-implementation-plan.json",
+    "frontend/src/components/SevaMitraBadge.tsx",
+    "project_state.json",
+    "scratch/component-selection.json",
+    "spec.md",
+    "spec_vs_diff_report.json"
+  ]
+}
