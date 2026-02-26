@@ -2,10 +2,29 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-fix-the-sevamitra-app-download-link-button-so-that-users-can-successfully-download-or-be-redirected-to-the-sevamitra-app-inspect-the-sevamitrabadge-component-and-any-other-places-where-the-sevamitra-download-link-appears-hero-footer-inline-badge-variants-and-ensure-the-url-is-correct-the-link-opens-properly-and-the-button-badge-is-functional-and-clickable",
-      "featureTitle": "Fix the SevaMitra app download link/button so that users can successfully download or be redirected to the SevaMitra app. Inspect the SevaMitraBadge component and any other places where the SevaMitra download link appears (Hero, Footer, inline badge variants) and ensure the URL is correct, the link opens properly, and the button/badge is functional and clickable.",
+      "featureId": "feature-investigate-and-fix-the-error-that-appears-during-the-booking-submission-flow-ensure-that-when-a-booking-fails-validation-error-backend-error-or-network-issue-a-clear-user-friendly-error-message-is-displayed-in-both-hindi-and-english-when-a-booking-succeeds-show-a-proper-success-confirmation-message-instead-of-an-error",
+      "featureTitle": "Investigate and fix the error that appears during the booking submission flow. Ensure that when a booking fails (validation error, backend error, or network issue), a clear, user-friendly error message is displayed in both Hindi and English. When a booking succeeds, show a proper success confirmation message instead of an error.",
       "files": [
-        "frontend/src/components/SevaMitraBadge.tsx"
+        "frontend/src/components/BookingForm.tsx"
+      ],
+      "components": [
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "authorization@4.0.0"
+      ],
+      "testIds": [
+        "REQ-1"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-add-or-update-bilingual-translation-strings-in-translations-ts-for-booking-error-and-success-states-covering-generic-submission-error-network-backend-unavailable-error-and-booking-confirmation-success-message-in-both-hindi-and-english",
+      "featureTitle": "Add or update bilingual translation strings in translations.ts for booking error and success states, covering: generic submission error, network/backend unavailable error, and booking confirmation success message — in both Hindi and English.",
+      "files": [
+        "frontend/src/translations.ts"
       ],
       "components": [
         "core-infrastructure@1.0.2",

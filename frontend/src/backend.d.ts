@@ -7,38 +7,14 @@ export interface None {
     __kind__: "None";
 }
 export type Option<T> = Some<T> | None;
-export interface Settings {
-    businessHours: string;
-    businessName: string;
-    businessAddress: string;
-    whatsappNumber: string;
-    contactPhone: string;
-}
 export type Time = bigint;
-export interface ServiceInput {
-    descriptionHindi: string;
-    nameHindi: string;
-    name: string;
-    description: string;
-    priceRange: string;
-    category: string;
-}
-export type Result = {
+export type Result_2 = {
     __kind__: "ok";
-    ok: boolean;
+    ok: bigint;
 } | {
     __kind__: "err";
     err: string;
 };
-export interface Service {
-    id: bigint;
-    descriptionHindi: string;
-    nameHindi: string;
-    name: string;
-    description: string;
-    priceRange: string;
-    category: string;
-}
 export interface BookingInput {
     customerName: string;
     serviceType: ServiceType;
@@ -50,6 +26,15 @@ export interface BookingInput {
     location: string;
     timeSlot: TimeSlot;
 }
+export interface Service {
+    id: bigint;
+    descriptionHindi: string;
+    nameHindi: string;
+    name: string;
+    description: string;
+    priceRange: string;
+    category: string;
+}
 export type Result_1 = {
     __kind__: "ok";
     ok: Service;
@@ -57,10 +42,6 @@ export type Result_1 = {
     __kind__: "err";
     err: string;
 };
-export interface UserProfile {
-    name: string;
-    email: string;
-}
 export interface BookingRecord {
     id: bigint;
     customerName: string;
@@ -74,6 +55,32 @@ export interface BookingRecord {
     problemDescription: string;
     phoneNumber: string;
     location: string;
+}
+export interface Settings {
+    businessHours: string;
+    businessName: string;
+    businessAddress: string;
+    whatsappNumber: string;
+    contactPhone: string;
+}
+export type Result = {
+    __kind__: "ok";
+    ok: boolean;
+} | {
+    __kind__: "err";
+    err: string;
+};
+export interface ServiceInput {
+    descriptionHindi: string;
+    nameHindi: string;
+    name: string;
+    description: string;
+    priceRange: string;
+    category: string;
+}
+export interface UserProfile {
+    name: string;
+    email: string;
 }
 export enum BookingStatus {
     cancelled = "cancelled",
@@ -103,7 +110,7 @@ export enum UserRole {
 }
 export interface backendInterface {
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
-    createBooking(input: BookingInput): Promise<bigint>;
+    createBooking(input: BookingInput): Promise<Result_2>;
     createService(input: ServiceInput): Promise<Result_1>;
     deleteService(id: bigint): Promise<Result>;
     getAllBookings(): Promise<Array<BookingRecord>>;

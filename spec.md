@@ -1,13 +1,14 @@
 # Specification
 
 ## Summary
-**Goal:** Fix the SevaMitra app download link so it works correctly across all sections of the site.
+**Goal:** Fix the booking form so that errors and successes are handled and displayed correctly in both Hindi and English.
 
 **Planned changes:**
-- Inspect and fix the download URL in the `SevaMitraBadge` component so it points to a valid, working link
-- Ensure the download button/badge in the Hero section is functional and clickable
-- Ensure the download button/badge in the Footer section is functional and clickable
-- Ensure the inline badge variant also links correctly
-- Verify the link opens properly on both desktop and mobile viewports
+- Investigate and fix the BookingForm component to correctly handle Promise rejections and actor call failures without crashing or showing spurious error messages
+- On successful booking submission, display a proper success confirmation message and no error message
+- On booking failure (validation, backend, or network error), display a clear, user-friendly error message in the active language (Hindi/English)
+- Add/update bilingual translation strings in `translations.ts` for `bookingSuccess`, `bookingError`, and `bookingNetworkError` in both Hindi and English
+- Update the BookingForm to render these translated strings dynamically based on the active language context
+- Review and update the backend `createBooking` (or equivalent) function in `main.mo` to return a `Result` type (`#ok` / `#err`) with a descriptive error message string on failure
 
-**User-visible outcome:** Users can successfully click the SevaMitra app download badge/button in the Hero, Footer, and inline badge locations and be redirected to a valid download or app store page.
+**User-visible outcome:** Users submitting the booking form will see a clear success message on successful booking, and a descriptive bilingual error message when something goes wrong — with no unhandled or misleading error messages appearing.

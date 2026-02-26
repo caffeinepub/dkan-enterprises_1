@@ -1,29 +1,39 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useActor } from './useActor';
-import { BookingStatus, BookingInput, ServiceInput, Settings } from '../backend';
+import type { BookingInput, BookingRecord, BookingStatus, ServiceInput, Service, Settings } from '../backend';
 
 export function useGetAllBookings() {
   const { actor, isFetching } = useActor();
-  return useQuery({
-    queryKey: ['bookings'],
+
+  return useQuery<BookingRecord[]>({
+    queryKey: ['allBookings'],
     queryFn: async () => {
-      if (!actor) return [];
-      return actor.getAllBookings();
+      if (!actor) throw new Error('Actor not available');
+      const result = await actor.getAllBookings();
+      return result;
     },
     enabled: !!actor && !isFetching,
+    retry: 1,
   });
 }
 
 export function useCreateBooking() {
-  const { actor } = useActor();
+  const { actor, isFetching } = useActor();
   const queryClient = useQueryClient();
+
   return useMutation({
-    mutationFn: async (input: BookingInput) => {
-      if (!actor) throw new Error('Actor not available');
-      return actor.createBooking(input);
+    mutationFn: async (input: BookingInput): Promise<bigint> => {
+      if (!actor) throw new Error('Actor not initialized. Please wait and try again.');
+      if (isFetching) throw new Error('Actor is still initializing. Please wait.');
+      const result = await actor.createBooking(input);
+      // Result_2 is { __kind__: "ok"; ok: bigint } | { __kind__: "err"; err: string }
+      if (result.__kind__ === 'err') {
+        throw new Error(result.err);
+      }
+      return result.ok;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['bookings'] });
+      queryClient.invalidateQueries({ queryKey: ['allBookings'] });
     },
   });
 }
@@ -31,21 +41,23 @@ export function useCreateBooking() {
 export function useUpdateBookingStatus() {
   const { actor } = useActor();
   const queryClient = useQueryClient();
+
   return useMutation({
-    mutationFn: async ({ bookingId, newStatus }: { bookingId: bigint; newStatus: BookingStatus }) => {
+    mutationFn: async ({ bookingId, status }: { bookingId: bigint; status: BookingStatus }) => {
       if (!actor) throw new Error('Actor not available');
-      return actor.updateBookingStatus(bookingId, newStatus);
+      await actor.updateBookingStatus(bookingId, status);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['bookings'] });
+      queryClient.invalidateQueries({ queryKey: ['allBookings'] });
     },
   });
 }
 
 export function useGetAllServices() {
   const { actor, isFetching } = useActor();
-  return useQuery({
-    queryKey: ['services'],
+
+  return useQuery<Service[]>({
+    queryKey: ['allServices'],
     queryFn: async () => {
       if (!actor) return [];
       return actor.getAllServices();
@@ -57,6 +69,7 @@ export function useGetAllServices() {
 export function useCreateService() {
   const { actor } = useActor();
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: async (input: ServiceInput) => {
       if (!actor) throw new Error('Actor not available');
@@ -65,7 +78,7 @@ export function useCreateService() {
       return result.ok;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['services'] });
+      queryClient.invalidateQueries({ queryKey: ['allServices'] });
     },
   });
 }
@@ -73,6 +86,7 @@ export function useCreateService() {
 export function useDeleteService() {
   const { actor } = useActor();
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: async (id: bigint) => {
       if (!actor) throw new Error('Actor not available');
@@ -81,14 +95,15 @@ export function useDeleteService() {
       return result.ok;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['services'] });
+      queryClient.invalidateQueries({ queryKey: ['allServices'] });
     },
   });
 }
 
 export function useGetSettings() {
   const { actor, isFetching } = useActor();
-  return useQuery({
+
+  return useQuery<Settings>({
     queryKey: ['settings'],
     queryFn: async () => {
       if (!actor) throw new Error('Actor not available');
@@ -101,26 +116,14 @@ export function useGetSettings() {
 export function useUpdateSettings() {
   const { actor } = useActor();
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: async (newSettings: Settings) => {
       if (!actor) throw new Error('Actor not available');
-      return actor.updateSettings(newSettings);
+      await actor.updateSettings(newSettings);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['settings'] });
     },
-  });
-}
-
-export function useGetDistrictsByState(state: string) {
-  const { actor, isFetching } = useActor();
-  return useQuery({
-    queryKey: ['districts', state],
-    queryFn: async () => {
-      if (!actor) return [];
-      if (!state) return [];
-      return actor.getDistrictsByState(state);
-    },
-    enabled: !!actor && !isFetching && !!state,
   });
 }

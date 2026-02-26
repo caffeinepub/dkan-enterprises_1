@@ -1,143 +1,194 @@
-import { useState, useEffect } from 'react';
-import { Lock, Eye, EyeOff, ShieldCheck } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-
-const ADMIN_PASSWORD = 'admin123';
-const SESSION_KEY = 'dkan_admin_auth';
+import React, { useState, useEffect } from 'react';
+import { Eye, EyeOff, Lock, Shield, LogIn, Loader2 } from 'lucide-react';
+import { useInternetIdentity } from '../hooks/useInternetIdentity';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface AdminPasswordGateProps {
-  children: React.ReactNode;
+  onAuthenticated: () => void;
 }
 
-export default function AdminPasswordGate({ children }: AdminPasswordGateProps) {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+const ADMIN_PASSWORD = 'admin123';
+const SESSION_KEY = 'admin_authenticated';
+
+export default function AdminPasswordGate({ onAuthenticated }: AdminPasswordGateProps) {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
-  const [isChecking, setIsChecking] = useState(false);
+  const [passwordVerified, setPasswordVerified] = useState(false);
 
+  const { login, clear, loginStatus, identity, isInitializing } = useInternetIdentity();
+  const queryClient = useQueryClient();
+
+  const isLoggingIn = loginStatus === 'logging-in';
+  const isAuthenticated = !!identity;
+
+  // Check session storage for password verification
   useEffect(() => {
     const stored = sessionStorage.getItem(SESSION_KEY);
     if (stored === 'true') {
-      setIsAuthenticated(true);
+      setPasswordVerified(true);
     }
   }, []);
 
-  const handleLogin = (e: React.FormEvent) => {
+  // Once both password verified AND identity present, call onAuthenticated
+  useEffect(() => {
+    if (passwordVerified && isAuthenticated) {
+      onAuthenticated();
+    }
+  }, [passwordVerified, isAuthenticated, onAuthenticated]);
+
+  const handlePasswordSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsChecking(true);
-    setError('');
+    if (password.trim() === ADMIN_PASSWORD) {
+      sessionStorage.setItem(SESSION_KEY, 'true');
+      setPasswordVerified(true);
+      setError('');
+    } else {
+      setError('गलत पासवर्ड। कृपया पुनः प्रयास करें। / Wrong password. Please try again.');
+    }
+  };
 
-    setTimeout(() => {
-      if (password.trim() === ADMIN_PASSWORD) {
-        sessionStorage.setItem(SESSION_KEY, 'true');
-        setIsAuthenticated(true);
-      } else {
-        setError('गलत पासवर्ड। फिर कोशिश करें। / Incorrect password. Please try again.');
-        setPassword('');
+  const handleLogin = async () => {
+    try {
+      await login();
+    } catch (err: any) {
+      if (err?.message === 'User is already authenticated') {
+        await clear();
+        queryClient.clear();
+        setTimeout(() => login(), 300);
       }
-      setIsChecking(false);
-    }, 400);
+    }
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await clear();
+    queryClient.clear();
     sessionStorage.removeItem(SESSION_KEY);
-    setIsAuthenticated(false);
+    setPasswordVerified(false);
     setPassword('');
-    setError('');
   };
 
-  if (isAuthenticated) {
+  if (isInitializing) {
     return (
-      <div>
-        <div className="bg-navy text-white px-4 py-2 flex items-center justify-between">
-          <div className="flex items-center gap-2 text-sm">
-            <ShieldCheck className="w-4 h-4 text-electric-green" />
-            <span className="text-electric-green font-semibold">Admin Mode</span>
-          </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleLogout}
-            className="text-gray-300 hover:text-white hover:bg-navy-light text-xs"
-          >
-            लॉगआउट / Logout
-          </Button>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          <p className="text-muted-foreground text-sm">Loading...</p>
         </div>
-        {children}
       </div>
     );
   }
 
-  return (
-    <div className="min-h-screen bg-navy/5 flex items-center justify-center px-4">
-      <div className="w-full max-w-md">
-        <div className="bg-card border border-border rounded-3xl p-8 shadow-navy-lg">
-          {/* Icon */}
-          <div className="flex justify-center mb-6">
-            <div className="w-16 h-16 bg-navy rounded-2xl flex items-center justify-center shadow-navy-lg">
-              <Lock className="w-8 h-8 text-electric-green" />
-            </div>
-          </div>
-
-          {/* Title */}
-          <div className="text-center mb-8">
-            <h1 className="text-2xl font-black text-foreground mb-2">
-              एडमिन डैशबोर्ड
-            </h1>
-            <p className="text-muted-foreground text-sm">
-              Admin Dashboard — DKAN Enterprises
-            </p>
-          </div>
-
-          {/* Form */}
-          <form onSubmit={handleLogin} className="space-y-5">
-            <div className="space-y-2">
-              <Label htmlFor="adminPassword" className="font-semibold text-foreground">
-                व्यवस्थापक पासवर्ड / Admin Password
-              </Label>
-              <div className="relative">
-                <Input
-                  id="adminPassword"
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={(e) => {
-                    setPassword(e.target.value);
-                    setError('');
-                  }}
-                  placeholder="पासवर्ड दर्ज करें / Enter password"
-                  className={`pr-10 ${error ? 'border-destructive' : ''}`}
-                  autoFocus
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
+  // Step 1: Password verification
+  if (!passwordVerified) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="w-full max-w-md">
+          <div className="bg-card border border-border rounded-2xl shadow-navy-lg p-8">
+            <div className="flex flex-col items-center mb-8">
+              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+                <Lock className="w-8 h-8 text-primary" />
               </div>
-              {error && (
-                <p className="text-destructive text-xs">{error}</p>
-              )}
+              <h1 className="text-2xl font-bold text-foreground text-center">Admin Access</h1>
+              <p className="text-muted-foreground text-sm text-center mt-1">
+                एडमिन पैनल में प्रवेश करें / Enter Admin Panel
+              </p>
             </div>
 
-            <Button
-              type="submit"
-              disabled={isChecking || !password.trim()}
-              className="w-full bg-navy hover:bg-navy-mid text-white font-bold py-3 rounded-xl"
-            >
-              {isChecking ? 'जांच हो रही है...' : 'लॉगिन करें / Login'}
-            </Button>
-          </form>
+            <form onSubmit={handlePasswordSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1">
+                  पासवर्ड / Password
+                </label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Enter admin password"
+                    className="w-full px-4 py-3 pr-12 border border-border rounded-xl bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
+                </div>
+              </div>
 
-          <p className="text-center text-xs text-muted-foreground mt-6">
-            केवल अधिकृत व्यक्तियों के लिए / Authorized personnel only
-          </p>
+              {error && (
+                <p className="text-destructive text-sm bg-destructive/10 px-3 py-2 rounded-lg">
+                  {error}
+                </p>
+              )}
+
+              <button
+                type="submit"
+                className="w-full py-3 bg-primary text-primary-foreground rounded-xl font-semibold hover:bg-primary/90 transition-colors"
+              >
+                जारी रखें / Continue
+              </button>
+            </form>
+          </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  }
+
+  // Step 2: Internet Identity login (required for backend admin calls)
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="w-full max-w-md">
+          <div className="bg-card border border-border rounded-2xl shadow-navy-lg p-8">
+            <div className="flex flex-col items-center mb-8">
+              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+                <Shield className="w-8 h-8 text-primary" />
+              </div>
+              <h1 className="text-2xl font-bold text-foreground text-center">Identity Verification</h1>
+              <p className="text-muted-foreground text-sm text-center mt-2">
+                बुकिंग देखने के लिए Internet Identity से लॉगिन करें।
+              </p>
+              <p className="text-muted-foreground text-xs text-center mt-1">
+                Login with Internet Identity to access bookings and admin features.
+              </p>
+            </div>
+
+            <button
+              onClick={handleLogin}
+              disabled={isLoggingIn}
+              className="w-full py-3 bg-primary text-primary-foreground rounded-xl font-semibold hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 disabled:opacity-60"
+            >
+              {isLoggingIn ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  Logging in...
+                </>
+              ) : (
+                <>
+                  <LogIn className="w-5 h-5" />
+                  Login with Internet Identity
+                </>
+              )}
+            </button>
+
+            <button
+              onClick={() => {
+                sessionStorage.removeItem(SESSION_KEY);
+                setPasswordVerified(false);
+              }}
+              className="w-full mt-3 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              ← Back / वापस जाएं
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Both verified — render nothing (parent will show dashboard)
+  return null;
 }

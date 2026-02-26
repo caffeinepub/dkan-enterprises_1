@@ -1,33 +1,38 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Fix SevaMitra App Download Link",
+  "title": "Fix booking form error message display",
   "requirements": [
     {
-      "id": "REQ-2",
-      "summary": "Fix the SevaMitra app download link/button across all instances (Hero, Footer, inline badge variants) to ensure users can successfully download or be redirected to the SevaMitra app with a correct, working URL",
+      "id": "REQ-1",
+      "summary": "Investigate and fix error message display in booking form to show proper success/error feedback in both Hindi and English",
       "acceptanceCriteria": [
-        "Clicking the SevaMitra app download badge/button in the Hero section opens a valid, working download or store link.",
-        "Clicking the SevaMitra app download badge/button in the Footer section opens a valid, working download or store link.",
-        "The SevaMitra inline badge variant also links correctly.",
-        "The link does not result in a 404, broken page, or no-action outcome.",
-        "The download link/button is visible and clearly tappable on both desktop and mobile viewports."
+        "Submitting the booking form does not show a spurious or unhandled error message on a successful booking",
+        "If a real error occurs (backend rejection, validation failure), a descriptive error message is displayed to the user in the current language (Hindi/English)",
+        "On successful booking submission, a success confirmation message is shown and no error message is visible",
+        "The BookingForm component handles Promise rejections and actor call failures gracefully without crashing",
+        "Error and success messages use the existing bilingual translations from translations.ts"
       ],
       "file_operations": [
         {
-          "path": "frontend/src/components/SevaMitraBadge.tsx",
+          "path": "frontend/src/components/BookingForm.tsx",
           "operation": "modify",
-          "description": "Update the SevaMitra badge component to use a correct, working download URL for the UP SevaMitra app. Replace any placeholder or broken URL with a valid link to the official SevaMitra app download page or store listing (Google Play Store or Apple App Store). Ensure the anchor tag has proper target='_blank' and rel='noopener noreferrer' attributes for external links. Verify the href is not empty, null, or pointing to a non-existent resource. The component is already used in Hero, Footer, and inline contexts, so this single fix will apply to all three variants."
-        },
+          "description": "Refactor the booking submission handler to properly distinguish between success and error responses from the backend createBooking function. Add state management for success/error messages. Implement proper error handling for Promise rejections, actor call failures, and network issues. Display success confirmation using translations when the backend returns #ok, and show descriptive error messages using translations when the backend returns #err or when network/actor errors occur. Clear any previous error/success state before each submission. Ensure the component uses the useLanguage hook to render messages in the active language (Hindi/English)."
+        }
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "summary": "Add bilingual translation strings for booking error and success states in translations.ts",
+      "acceptanceCriteria": [
+        "translations.ts contains keys for bookingSuccess, bookingError, and bookingNetworkError in both Hindi and English",
+        "BookingForm renders these translated strings dynamically based on the active language context"
+      ],
+      "file_operations": [
         {
-          "path": "frontend/src/components/Hero.tsx",
+          "path": "frontend/src/translations.ts",
           "operation": "modify",
-          "description": "Verify that the SevaMitraBadge component is rendered with the 'hero' variant and confirm it is visible and properly styled for desktop and mobile viewports. Ensure no CSS or layout issues prevent the badge from being clickable. No URL changes are needed here since the badge component handles the link."
-        },
-        {
-          "path": "frontend/src/components/Footer.tsx",
-          "operation": "modify",
-          "description": "Verify that the SevaMitraBadge component is rendered with the 'footer' variant and confirm it is visible and properly styled for desktop and mobile viewports. Ensure no CSS or layout issues prevent the badge from being clickable. No URL changes are needed here since the badge component handles the link."
+          "description": "Add translation keys for booking feedback messages: bookingSuccess (booking confirmation message), bookingError (generic submission/validation error), and bookingNetworkError (network or backend unavailable error). Provide both Hindi and English versions for each key. Ensure the keys are added to the existing translation structure and follow the existing bilingual pattern used throughout the file."
         }
       ]
     }

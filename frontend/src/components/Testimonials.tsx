@@ -54,8 +54,8 @@ const testimonials = [
 ];
 
 const avatarColors = [
-  'bg-blue-500', 'bg-purple-500', 'bg-teal-500',
-  'bg-green-500', 'bg-orange-500', 'bg-pink-500'
+  'bg-blue-600', 'bg-purple-600', 'bg-teal-600',
+  'bg-green-600', 'bg-orange-600', 'bg-pink-600'
 ];
 
 export default function Testimonials() {
@@ -66,9 +66,9 @@ export default function Testimonials() {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="text-center mb-14">
-          <div className="inline-flex items-center gap-2 bg-electric-green/10 border border-electric-green/30 rounded-full px-4 py-1.5 mb-4">
-            <Star className="w-4 h-4 text-electric-green fill-electric-green" />
-            <span className="text-electric-green text-sm font-semibold">
+          <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/30 rounded-full px-4 py-1.5 mb-4">
+            <Star className="w-4 h-4 text-primary fill-primary" />
+            <span className="text-primary text-sm font-semibold">
               {t(translations.testimonials.title, lang)}
             </span>
           </div>
@@ -88,20 +88,20 @@ export default function Testimonials() {
               className="bg-card border border-border rounded-2xl p-6 card-hover relative"
             >
               {/* Quote icon */}
-              <Quote className="absolute top-4 right-4 w-8 h-8 text-electric-green/10" />
+              <Quote className="absolute top-4 right-4 w-8 h-8 text-primary/10" />
 
               {/* Stars */}
               <div className="flex gap-1 mb-4">
                 {[...Array(5)].map((_, s) => (
                   <Star
                     key={s}
-                    className={`w-4 h-4 ${s < item.rating ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`}
+                    className={`w-4 h-4 ${s < item.rating ? 'text-yellow-500 fill-yellow-500' : 'text-gray-300'}`}
                   />
                 ))}
               </div>
 
               {/* Review text */}
-              <p className="text-foreground/80 text-sm leading-relaxed mb-5">
+              <p className="text-foreground text-sm leading-relaxed mb-5 font-hindi">
                 "{item.text}"
               </p>
 
@@ -115,7 +115,7 @@ export default function Testimonials() {
                   <div className="text-muted-foreground text-xs">{item.location}</div>
                 </div>
                 <div className="ml-auto">
-                  <span className="text-xs bg-electric-green/10 text-electric-green-dark border border-electric-green/20 rounded-full px-2 py-0.5 font-medium">
+                  <span className="text-xs bg-primary/10 text-primary border border-primary/20 rounded-full px-2 py-0.5 font-medium">
                     {item.service}
                   </span>
                 </div>

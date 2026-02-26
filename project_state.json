@@ -1,25 +1,42 @@
 {
   "schemaVersion": "1.0.0",
   "projectStateVersion": 3,
-  "summary": "SevaMitra app - fixing download issue reported by user",
+  "summary": "Project with admin dashboard and booking functionality. Booking error message issue reported.",
   "architectural_notes": [],
   "known_issues": [
-    "App download not working - user reported SevaMitra app cannot be downloaded"
+    "Booking error message issue reported by user (बुकिंग में त्रुटि एरर मेसेज)"
   ],
   "isFixRequest": true,
   "existing_features": [
     {
-      "id": "feature-fix-the-sevamitra-app-download-link-button-so-that-users-can-successfully-download-or-be-redirected-to-the-sevamitra-app-inspect-the-sevamitrabadge-component-and-any-other-places-where-the-sevamitra-download-link-appears-hero-footer-inline-badge-variants-and-ensure-the-url-is-correct-the-link-opens-properly-and-the-button-badge-is-functional-and-clickable",
-      "title": "Fix the SevaMitra app download link/button so that users can successfully download or be redirected to the SevaMitra app. Inspect the SevaMitraBadge component and any other places where the SevaMitra download link appears (Hero, Footer, inline badge variants) and ensure the URL is correct, the link opens properly, and the button/badge is functional and clickable.",
+      "id": "feature-investigate-and-fix-the-error-that-appears-during-the-booking-submission-flow-ensure-that-when-a-booking-fails-validation-error-backend-error-or-network-issue-a-clear-user-friendly-error-message-is-displayed-in-both-hindi-and-english-when-a-booking-succeeds-show-a-proper-success-confirmation-message-instead-of-an-error",
+      "title": "Investigate and fix the error that appears during the booking submission flow. Ensure that when a booking fails (validation error, backend error, or network issue), a clear, user-friendly error message is displayed in both Hindi and English. When a booking succeeds, show a proper success confirmation message instead of an error.",
+      "reqIds": [
+        "REQ-1"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-or-update-bilingual-translation-strings-in-translations-ts-for-booking-error-and-success-states-covering-generic-submission-error-network-backend-unavailable-error-and-booking-confirmation-success-message-in-both-hindi-and-english",
+      "title": "Add or update bilingual translation strings in translations.ts for booking error and success states, covering: generic submission error, network/backend unavailable error, and booking confirmation success message — in both Hindi and English.",
       "reqIds": [
         "REQ-2"
       ],
       "version": 1
     }
   ],
-  "new_feature_requests": [],
+  "new_feature_requests": [
+    {
+      "id": "AR-3",
+      "summary": "Review the backend createBooking or equivalent booking mutation endpoint in main.mo to ensure it returns a proper error variant (e.g., #err) when booking creation fails, so the frontend can distinguish success from failure reliably.",
+      "reqIds": [
+        "REQ-3"
+      ],
+      "status": "pending"
+    }
+  ],
   "gameProjectType": "none",
-  "projectName": "SevaMitra",
+  "projectName": "Fix booking form error message display",
   "clarification_mode": "instant",
   "clarification_rounds": 0
 }

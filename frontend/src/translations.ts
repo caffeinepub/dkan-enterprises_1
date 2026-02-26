@@ -1,5 +1,7 @@
 export type Language = 'hi' | 'en';
 
+export type TranslationEntry = { hi: string; en: string };
+
 export const translations = {
   nav: {
     home: { hi: 'होम', en: 'Home' },
@@ -46,258 +48,137 @@ export const translations = {
     geyserRepair: { hi: 'गीजर रिपेयर', en: 'Geyser Repair' },
     lcdLedTvRepair: { hi: 'LCD/LED TV रिपेयर', en: 'LCD/LED TV Repair' },
     waterPurifier: { hi: 'वाटर प्यूरीफायर', en: 'Water Purifier' },
-    items: {
-      mobileRepair: {
-        name: { hi: 'मोबाइल रिपेयर', en: 'Mobile Repair' },
-        desc: {
-          hi: 'स्क्रीन रिप्लेसमेंट, बैटरी, चार्जिंग पोर्ट, चिप-लेवल रिपेयर',
-          en: 'Screen replacement, battery, charging port, chip-level repair',
-        },
-        price: { hi: '₹299 से शुरू', en: 'From ₹299' },
-      },
-      laptopRepair: {
-        name: { hi: 'लैपटॉप चिप लेवल रिपेयर', en: 'Laptop Chip-Level Repair' },
-        desc: {
-          hi: 'मदरबोर्ड रिपेयर, डेटा रिकवरी, स्क्रीन, कीबोर्ड रिप्लेसमेंट',
-          en: 'Motherboard repair, data recovery, screen, keyboard replacement',
-        },
-        price: { hi: '₹499 से शुरू', en: 'From ₹499' },
-      },
-    },
   },
   booking: {
     title: { hi: 'सेवा बुक करें', en: 'Book a Service' },
-    subtitle: {
-      hi: 'उत्तर प्रदेश सरकार के सेवामित्र पार्टनर — DKAN Enterprises',
-      en: 'Uttar Pradesh Government SevaMitra Partner — DKAN Enterprises',
-    },
-    name: { hi: 'आपका नाम', en: 'Your Name' },
-    namePlaceholder: { hi: 'पूरा नाम दर्ज करें', en: 'Enter your full name' },
-    phone: { hi: 'फोन नंबर', en: 'Phone Number' },
-    phonePlaceholder: { hi: '10 अंकों का मोबाइल नंबर', en: '10-digit mobile number' },
-    customerName: { hi: 'ग्राहक का नाम', en: 'Customer Name' },
-    phoneNumber: { hi: 'फोन नंबर', en: 'Phone Number' },
-    serviceType: { hi: 'सेवा का प्रकार', en: 'Service Type' },
-    serviceTypePlaceholder: { hi: 'सर्विस चुनें', en: 'Select a service' },
+    subtitle: { hi: 'अपनी समस्या बताएं, हम समाधान लाएंगे।', en: 'Tell us your problem, we will bring the solution.' },
+    name: { hi: 'पूरा नाम *', en: 'Full Name *' },
+    phone: { hi: 'मोबाइल नंबर *', en: 'Mobile Number *' },
+    state: { hi: 'राज्य *', en: 'State *' },
+    district: { hi: 'जिला *', en: 'District *' },
+    selectDistrict: { hi: 'जिला चुनें', en: 'Select District' },
+    location: { hi: 'पता / मोहल्ला *', en: 'Address / Locality *' },
+    serviceType: { hi: 'सेवा का प्रकार *', en: 'Service Type *' },
     selectService: { hi: 'सेवा चुनें', en: 'Select Service' },
-    problem: { hi: 'समस्या का विवरण', en: 'Problem Description' },
+    preferredDate: { hi: 'पसंदीदा तारीख *', en: 'Preferred Date *' },
+    timeSlot: { hi: 'समय स्लॉट *', en: 'Time Slot *' },
+    selectTime: { hi: 'समय चुनें', en: 'Select Time' },
     problemDescription: { hi: 'समस्या का विवरण', en: 'Problem Description' },
-    problemPlaceholder: {
-      hi: 'अपनी समस्या विस्तार से बताएं...',
-      en: 'Describe your problem in detail...',
-    },
-    location: { hi: 'स्थान', en: 'Location' },
-    stateLabel: { hi: 'राज्य / State', en: 'राज्य / State' },
-    statePlaceholder: { hi: 'राज्य चुनें / Select State', en: 'राज्य चुनें / Select State' },
-    cityDistrictLabel: { hi: 'शहर / जिला', en: 'City / District' },
-    cityDistrictPlaceholder: { hi: 'शहर या जिला दर्ज करें', en: 'Enter city or district' },
-    preferredDate: { hi: 'पसंदीदा तारीख', en: 'Preferred Date' },
-    date: { hi: 'पसंदीदा तारीख', en: 'Preferred Date' },
-    timeSlot: { hi: 'समय स्लॉट', en: 'Time Slot' },
-    selectTimeSlot: { hi: 'समय स्लॉट चुनें', en: 'Select Time Slot' },
-    timeSlotPlaceholder: { hi: 'समय चुनें', en: 'Select time' },
-    submit: { hi: 'बुकिंग करें', en: 'Submit Booking' },
-    submitting: { hi: 'बुकिंग हो रही है...', en: 'Submitting...' },
-    success: { hi: 'बुकिंग सफलतापूर्वक हो गई!', en: 'Booking submitted successfully!' },
-    successTitle: { hi: 'बुकिंग सफल! 🎉', en: 'Booking Successful! 🎉' },
-    successMsg: {
-      hi: 'आपकी बुकिंग कन्फर्म हो गई है। हमारी टीम जल्द ही आपसे संपर्क करेगी।',
-      en: 'Your booking is confirmed. Our team will contact you shortly.',
-    },
-    successId: { hi: 'बुकिंग ID:', en: 'Booking ID:' },
+    submit: { hi: 'बुकिंग करें', en: 'Book Now' },
+    submitting: { hi: 'बुकिंग हो रही है...', en: 'Booking...' },
+    fillAllFields: { hi: 'कृपया सभी फ़ील्ड भरें।', en: 'Please fill all fields.' },
+    systemInitializing: { hi: 'सिस्टम तैयार हो रहा है। कृपया कुछ सेकंड प्रतीक्षा करें।', en: 'System is initializing. Please wait a few seconds.' },
+    systemInitializingShort: { hi: 'सिस्टम तैयार हो रहा है...', en: 'System initializing...' },
     newBooking: { hi: 'नई बुकिंग करें', en: 'New Booking' },
-    error: { hi: 'बुकिंग में त्रुटि हुई। कृपया पुनः प्रयास करें।', en: 'Error submitting booking. Please try again.' },
-    errorMsg: {
-      hi: 'बुकिंग में समस्या आई। कृपया दोबारा कोशिश करें।',
+    bookingId: { hi: 'बुकिंग ID:', en: 'Booking ID:' },
+    contactSoon: { hi: 'हम जल्द ही आपसे संपर्क करेंगे।', en: 'We will contact you shortly.' },
+    tryAgain: { hi: 'पुनः प्रयास करें', en: 'Try again' },
+    bookingSuccess: {
+      hi: 'बुकिंग सफलतापूर्वक हो गई! हम जल्द ही आपसे संपर्क करेंगे।',
+      en: 'Booking successful! We will contact you shortly.',
+    },
+    bookingSuccessTitle: {
+      hi: 'बुकिंग सफल!',
+      en: 'Booking Successful!',
+    },
+    bookingError: {
+      hi: 'बुकिंग में त्रुटि हुई। कृपया पुनः प्रयास करें।',
       en: 'Booking failed. Please try again.',
     },
-    required: { hi: 'यह फील्ड जरूरी है', en: 'This field is required' },
-    phoneInvalid: { hi: 'सही फोन नंबर दर्ज करें', en: 'Enter a valid phone number' },
-    whatsappConfirm: { hi: 'WhatsApp पर कन्फर्म करें', en: 'Confirm on WhatsApp' },
-    morning: { hi: 'सुबह 9-12', en: 'Morning 9-12' },
-    afternoon: { hi: 'दोपहर 12-4', en: 'Afternoon 12-4' },
-    evening: { hi: 'शाम 4-7', en: 'Evening 4-7' },
-    upGovNote: { hi: 'उत्तर प्रदेश सरकार का सेवामित्र पार्टनर', en: 'Uttar Pradesh Sarkar ka SevaMitra Partner' },
-  },
-  timeSlots: {
-    morning: { hi: 'सुबह 9 - 12 बजे', en: 'Morning 9 AM – 12 PM' },
-    afternoon: { hi: 'दोपहर 12 - 4 बजे', en: 'Afternoon 12 PM – 4 PM' },
-    evening: { hi: 'शाम 4 - 7 बजे', en: 'Evening 4 PM – 7 PM' },
-  },
-  serviceTypes: {
-    acRepair: { hi: 'AC रिपेयर', en: 'AC Repair' },
-    washingMachineRepair: { hi: 'वॉशिंग मशीन रिपेयर', en: 'Washing Machine Repair' },
-    refrigeratorRepair: { hi: 'रेफ्रिजरेटर रिपेयर', en: 'Refrigerator Repair' },
-    microwaveRepair: { hi: 'माइक्रोवेव रिपेयर', en: 'Microwave Repair' },
-    geyserRepair: { hi: 'गीजर रिपेयर', en: 'Geyser Repair' },
-    lcdLedTvRepair: { hi: 'LCD/LED TV रिपेयर', en: 'LCD/LED TV Repair' },
-    waterPurifier: { hi: 'वाटर प्यूरीफायर', en: 'Water Purifier' },
-  },
-  kanpurAreas: [
-    'Arya Nagar', 'Barra', 'Birhana Road', 'Civil Lines', 'Colonelganj',
-    'Fazalganj', 'Govind Nagar', 'Harsh Nagar', 'Juhi', 'Kakadeo',
-    'Kalyanpur', 'Kidwai Nagar', 'Koyla Nagar', 'Lajpat Nagar',
-    'Meston Road', 'Naubasta', 'Panki', 'Rawatpur', 'Shyam Nagar',
-    'Swaroop Nagar', 'Tilak Nagar', 'Vikas Nagar', 'Yashoda Nagar',
-    'Other / अन्य',
-  ],
-  indianStates: [
-    'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
-    'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand',
-    'Karnataka', 'Kerala', 'Madhya Pradesh', 'Maharashtra', 'Manipur',
-    'Meghalaya', 'Mizoram', 'Nagaland', 'Odisha', 'Punjab',
-    'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura',
-    'Uttar Pradesh', 'Uttarakhand', 'West Bengal',
-    'Andaman & Nicobar Islands', 'Chandigarh',
-    'Dadra & Nagar Haveli and Daman & Diu', 'Delhi (NCT)',
-    'Jammu & Kashmir', 'Ladakh', 'Lakshadweep', 'Puducherry',
-  ],
-  states: {
-    label: { hi: 'राज्य चुनें', en: 'Select State' },
-    list: [
-      'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
-      'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand',
-      'Karnataka', 'Kerala', 'Madhya Pradesh', 'Maharashtra', 'Manipur',
-      'Meghalaya', 'Mizoram', 'Nagaland', 'Odisha', 'Punjab',
-      'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura',
-      'Uttar Pradesh', 'Uttarakhand', 'West Bengal',
-      'Andaman and Nicobar Islands', 'Chandigarh',
-      'Dadra and Nagar Haveli and Daman and Diu', 'Delhi',
-      'Jammu and Kashmir', 'Ladakh', 'Lakshadweep', 'Puducherry',
-    ],
+    bookingNetworkError: {
+      hi: 'नेटवर्क त्रुटि। कृपया अपना इंटरनेट कनेक्शन जांचें और पुनः प्रयास करें।',
+      en: 'Network error. Please check your internet connection and try again.',
+    },
+    bookingActorError: {
+      hi: 'सिस्टम तैयार हो रहा है। कृपया कुछ सेकंड प्रतीक्षा करें और पुनः प्रयास करें।',
+      en: 'System is initializing. Please wait a few seconds and try again.',
+    },
+    bookingValidationError: {
+      hi: 'कृपया सभी आवश्यक जानकारी सही से भरें।',
+      en: 'Please fill in all required information correctly.',
+    },
   },
   testimonials: {
     title: { hi: 'ग्राहकों की राय', en: 'Customer Reviews' },
     subtitle: {
-      hi: 'हमारे हजारों संतुष्ट ग्राहकों की बात',
-      en: 'What our thousands of satisfied customers say',
+      hi: 'हमारे संतुष्ट ग्राहकों की समीक्षाएं',
+      en: 'Reviews from our satisfied customers',
     },
   },
   contact: {
     title: { hi: 'संपर्क करें', en: 'Contact Us' },
-    subtitle: {
-      hi: 'उत्तर प्रदेश सरकार के सेवामित्र पार्टनर — हम आपकी सेवा में तत्पर हैं',
-      en: 'Uttar Pradesh Government SevaMitra Partner — We are ready to serve you',
-    },
+    subtitle: { hi: 'हम आपकी सहायता के लिए यहाँ हैं', en: 'We are here to help you' },
     phone: { hi: 'फोन', en: 'Phone' },
+    whatsapp: { hi: 'व्हाट्सएप', en: 'WhatsApp' },
     address: { hi: 'पता', en: 'Address' },
-    addressValue: {
-      hi: 'Kanpur, उत्तर प्रदेश - 208001',
-      en: 'Kanpur, Uttar Pradesh - 208001',
-    },
-    hours: { hi: 'कार्य समय', en: 'Business Hours' },
-    hoursValue: {
-      hi: 'सोम-रवि: सुबह 9 बजे - शाम 7 बजे',
-      en: 'Mon-Sun: 9 AM – 7 PM',
-    },
+    addressValue: { hi: 'कानपुर, उत्तर प्रदेश', en: 'Kanpur, Uttar Pradesh' },
+    hours: { hi: 'समय', en: 'Hours' },
+    hoursValue: { hi: 'सोम-शनि: सुबह 9 बजे - शाम 7 बजे', en: 'Mon-Sat: 9am - 7pm' },
     email: { hi: 'ईमेल', en: 'Email' },
-    mapTitle: { hi: 'Kanpur, UP में हमारी लोकेशन', en: 'Our Location in Kanpur, UP' },
-    whatsapp: { hi: 'WhatsApp पर संपर्क करें', en: 'Contact on WhatsApp' },
-    upGovPartner: { hi: 'उत्तर प्रदेश सरकार का सेवामित्र पार्टनर', en: 'Uttar Pradesh Sarkar ka SevaMitra Partner' },
-  },
-  sevamitra: {
-    partner: { hi: 'उत्तर प्रदेश सरकार का सेवामित्र पार्टनर', en: 'Uttar Pradesh Sarkar ka SevaMitra Partner' },
-    download: {
-      hi: 'SevaMitra ऐप डाउनलोड करें और आसानी से सर्विस बुक करें',
-      en: 'Download SevaMitra App for easy service booking',
-    },
-    button: { hi: 'Google Play से डाउनलोड करें', en: 'Download on Google Play' },
-    footerBtn: { hi: 'Google Play से Sewa Mitra ऐप इंस्टॉल करें', en: 'Install Sewa Mitra App from Google Play' },
-  },
-  sevaMitraBadge: {
-    sevaMitra: { hi: 'उत्तर प्रदेश सरकार का सेवामित्र पार्टनर', en: 'Uttar Pradesh Sarkar ka SevaMitra Partner' },
-    download: { hi: 'ऐप डाउनलोड करें', en: 'Download App' },
-    upGovPartnership: { hi: 'उत्तर प्रदेश सरकार के साथ साझेदारी में', en: 'In partnership with Uttar Pradesh Government' },
+    upGovPartner: { hi: 'उत्तर प्रदेश सरकार का अधिकृत सेवामित्र पार्टनर', en: 'Authorized SevaMitra Partner of UP Government' },
+    mapTitle: { hi: 'हमारा स्थान', en: 'Our Location' },
   },
   whatsapp: {
-    label: { hi: 'WhatsApp पर बात करें', en: 'Chat on WhatsApp' },
+    chat: { hi: 'व्हाट्सएप पर चैट करें', en: 'Chat on WhatsApp' },
+    label: { hi: 'व्हाट्सएप', en: 'WhatsApp' },
+  },
+  sevamitra: {
+    badge: { hi: 'सेवामित्र पार्टनर', en: 'SevaMitra Partner' },
+    tagline: { hi: 'उत्तर प्रदेश सरकार द्वारा प्रमाणित', en: 'Certified by UP Government' },
+    downloadApp: { hi: 'ऐप डाउनलोड करें', en: 'Download App' },
   },
   footer: {
-    tagline: {
-      hi: 'उत्तर प्रदेश सरकार के सेवामित्र पार्टनर — DKAN Enterprises घर बैठे सर्वश्रेष्ठ होम अप्लायंस रिपेयर सेवा प्रदान करता है।',
-      en: 'Uttar Pradesh Government SevaMitra Partner — DKAN Enterprises provides the best home appliance repair service at your doorstep.',
-    },
-    description: {
-      hi: 'उत्तर प्रदेश सरकार के सेवामित्र पार्टनर — DKAN Enterprises घर बैठे सर्वश्रेष्ठ होम अप्लायंस रिपेयर सेवा प्रदान करता है।',
-      en: 'Uttar Pradesh Government SevaMitra Partner — DKAN Enterprises provides the best home appliance repair service at your doorstep.',
-    },
+    tagline: { hi: 'घर बैठे पाएं विश्वसनीय होम अप्लायंस रिपेयर सेवा', en: 'Get reliable home appliance repair service at your doorstep' },
     quickLinks: { hi: 'त्वरित लिंक', en: 'Quick Links' },
-    services: { hi: 'सर्विसेज', en: 'Services' },
-    ourServices: { hi: 'हमारी सेवाएं', en: 'Our Services' },
-    legal: { hi: 'लीगल', en: 'Legal' },
-    privacy: { hi: 'प्राइवेसी पॉलिसी', en: 'Privacy Policy' },
-    privacyPolicy: { hi: 'प्राइवेसी पॉलिसी', en: 'Privacy Policy' },
-    terms: { hi: 'सेवा की शर्तें', en: 'Terms of Service' },
-    termsOfService: { hi: 'सेवा की शर्तें', en: 'Terms of Service' },
-    gst: { hi: 'GST नंबर:', en: 'GST No:' },
-    gstValue: 'XXXXXXXXXXXX',
-    copyright: { hi: 'सर्वाधिकार सुरक्षित', en: 'All rights reserved' },
-    allRightsReserved: { hi: 'सर्वाधिकार सुरक्षित', en: 'All Rights Reserved' },
-    builtWith: { hi: 'प्यार से बनाया गया', en: 'Built with' },
-    upGovPartner: { hi: 'उत्तर प्रदेश सरकार का सेवामित्र पार्टनर', en: 'Uttar Pradesh Sarkar ka SevaMitra Partner' },
-    upGovPartnership: { hi: 'उत्तर प्रदेश सरकार के साथ साझेदारी में', en: 'In partnership with Uttar Pradesh Government' },
+    contactInfo: { hi: 'संपर्क जानकारी', en: 'Contact Info' },
+    rights: { hi: 'सर्वाधिकार सुरक्षित', en: 'All rights reserved' },
+    builtWith: { hi: 'प्यार से बनाया गया', en: 'Built with love' },
+    upGovPartner: { hi: 'उत्तर प्रदेश सरकार का अधिकृत सेवामित्र पार्टनर', en: 'Authorized SevaMitra Partner of Uttar Pradesh Government' },
   },
   admin: {
     title: { hi: 'एडमिन डैशबोर्ड', en: 'Admin Dashboard' },
-    dashboard: { hi: 'एडमिन डैशबोर्ड', en: 'Admin Dashboard' },
     bookings: { hi: 'बुकिंग', en: 'Bookings' },
     services: { hi: 'सेवाएं', en: 'Services' },
     settings: { hi: 'सेटिंग्स', en: 'Settings' },
-    password: { hi: 'व्यवस्थापक पासवर्ड / Admin Password', en: 'व्यवस्थापक पासवर्ड / Admin Password' },
-    enterPassword: { hi: 'पासवर्ड दर्ज करें', en: 'Enter password' },
-    incorrectPassword: { hi: 'गलत पासवर्ड। फिर कोशिश करें।', en: 'Incorrect password. Please try again.' },
-    login: { hi: 'लॉगिन करें', en: 'Login' },
     logout: { hi: 'लॉगआउट', en: 'Logout' },
-    totalBookings: { hi: 'कुल बुकिंग', en: 'Total Bookings' },
-    pendingBookings: { hi: 'लंबित बुकिंग', en: 'Pending Bookings' },
-    completedBookings: { hi: 'पूर्ण बुकिंग', en: 'Completed Bookings' },
-    statusPending: { hi: 'पेंडिंग', en: 'Pending' },
-    statusConfirmed: { hi: 'कन्फर्म', en: 'Confirmed' },
-    statusInProgress: { hi: 'प्रगति में', en: 'In Progress' },
-    statusCompleted: { hi: 'पूर्ण', en: 'Completed' },
-    statusCancelled: { hi: 'रद्द', en: 'Cancelled' },
-    filterByStatus: { hi: 'स्टेटस से फ़िल्टर', en: 'Filter by Status' },
-    filterByService: { hi: 'सर्विस से फ़िल्टर', en: 'Filter by Service' },
-    searchCustomer: { hi: 'नाम/फोन से खोजें', en: 'Search by name/phone' },
-    searchPlaceholder: { hi: 'ग्राहक का नाम खोजें...', en: 'Search customer name...' },
-    customerName: { hi: 'ग्राहक का नाम', en: 'Customer Name' },
-    phone: { hi: 'फोन', en: 'Phone' },
-    serviceType: { hi: 'सर्विस', en: 'Service' },
-    location: { hi: 'लोकेशन', en: 'Location' },
-    date: { hi: 'तारीख', en: 'Date' },
-    timeSlot: { hi: 'समय', en: 'Time Slot' },
-    timestamp: { hi: 'बुकिंग समय', en: 'Booked At' },
-    status: { hi: 'स्टेटस', en: 'Status' },
-    updateStatus: { hi: 'स्टेटस अपडेट करें', en: 'Update Status' },
-    noBookingsFound: { hi: 'कोई बुकिंग नहीं मिली', en: 'No bookings found' },
-    allStatuses: { hi: 'सभी स्टेटस', en: 'All Statuses' },
-    allServices: { hi: 'सभी सर्विसेज', en: 'All Services' },
+    noBookings: { hi: 'कोई बुकिंग नहीं', en: 'No bookings found' },
     loading: { hi: 'लोड हो रहा है...', en: 'Loading...' },
-    error: { hi: 'डेटा लोड करने में समस्या', en: 'Error loading data' },
-    refresh: { hi: 'रिफ्रेश करें', en: 'Refresh' },
-    bookingId: { hi: 'बुकिंग ID', en: 'Booking ID' },
-    problem: { hi: 'समस्या', en: 'Problem' },
-    accessDenied: { hi: 'एक्सेस नहीं है। एडमिन लॉगिन करें।', en: 'Access denied. Please login as admin.' },
-    addService: { hi: 'नई सेवा जोड़ें', en: 'Add New Service' },
-    deleteService: { hi: 'सेवा हटाएं', en: 'Delete Service' },
-    serviceName: { hi: 'सेवा का नाम (अंग्रेजी)', en: 'Service Name (English)' },
-    serviceNameHindi: { hi: 'सेवा का नाम (हिंदी)', en: 'Service Name (Hindi)' },
-    serviceCategory: { hi: 'श्रेणी', en: 'Category' },
-    serviceDescription: { hi: 'विवरण (अंग्रेजी)', en: 'Description (English)' },
-    serviceDescriptionHindi: { hi: 'विवरण (हिंदी)', en: 'Description (Hindi)' },
-    servicePriceRange: { hi: 'मूल्य सीमा', en: 'Price Range' },
-    saveSettings: { hi: 'सेटिंग्स सहेजें', en: 'Save Settings' },
-    businessName: { hi: 'व्यवसाय का नाम', en: 'Business Name' },
-    contactPhone: { hi: 'संपर्क फोन', en: 'Contact Phone' },
-    whatsappNumber: { hi: 'WhatsApp नंबर', en: 'WhatsApp Number' },
-    businessAddress: { hi: 'व्यवसाय का पता', en: 'Business Address' },
-    businessHours: { hi: 'कार्य समय', en: 'Business Hours' },
+    error: { hi: 'त्रुटि', en: 'Error' },
+    status: {
+      pending: { hi: 'लंबित', en: 'Pending' },
+      confirmed: { hi: 'पुष्टि', en: 'Confirmed' },
+      inProgress: { hi: 'प्रगति में', en: 'In Progress' },
+      completed: { hi: 'पूर्ण', en: 'Completed' },
+      cancelled: { hi: 'रद्द', en: 'Cancelled' },
+    },
   },
 };
 
 export type TranslationKey = keyof typeof translations;
 
-/** Helper: pick the correct language string from a bilingual object */
-export function t(obj: { hi: string; en: string }, lang: Language): string {
-  return obj[lang];
+/**
+ * Translate a key. Accepts either:
+ *  - a dot-notation string path (e.g. "booking.title")
+ *  - a TranslationEntry object ({ hi: string; en: string }) directly
+ */
+export function t(key: string | TranslationEntry, lang: 'hi' | 'en'): string {
+  // If the caller passes a { hi, en } object directly, resolve it immediately
+  if (typeof key === 'object' && key !== null) {
+    return key[lang] ?? '';
+  }
+
+  // Otherwise walk the dot-notation path
+  const keys = (key as string).split('.');
+  let current: unknown = translations;
+  for (const k of keys) {
+    if (current && typeof current === 'object' && k in (current as object)) {
+      current = (current as Record<string, unknown>)[k];
+    } else {
+      return key as string;
+    }
+  }
+  if (current && typeof current === 'object' && lang in (current as object)) {
+    return (current as Record<string, string>)[lang];
+  }
+  return key as string;
 }

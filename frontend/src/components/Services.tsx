@@ -75,9 +75,9 @@ const serviceColors = [
 ];
 
 const iconColors = [
-  'text-blue-400', 'text-purple-400', 'text-cyan-400',
-  'text-teal-400', 'text-green-400', 'text-indigo-400',
-  'text-orange-400', 'text-rose-400',
+  'text-blue-600', 'text-purple-600', 'text-cyan-600',
+  'text-teal-600', 'text-green-600', 'text-indigo-600',
+  'text-orange-600', 'text-rose-600',
 ];
 
 // Pick an icon based on service name/category keywords
@@ -145,8 +145,8 @@ export default function Services() {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="text-center mb-14">
-          <div className="inline-flex items-center gap-2 bg-electric-green/10 border border-electric-green/30 rounded-full px-4 py-1.5 mb-4">
-            <span className="text-electric-green text-sm font-semibold">
+          <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/30 rounded-full px-4 py-1.5 mb-4">
+            <span className="text-primary text-sm font-semibold">
               {t(translations.services.title, lang)}
             </span>
           </div>
@@ -195,7 +195,7 @@ export default function Services() {
                       onClick={scrollToBooking}
                     >
                       {/* Icon */}
-                      <div className="w-14 h-14 bg-navy/10 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                      <div className="w-14 h-14 bg-white/60 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
                         <Icon className={`w-7 h-7 ${iconColors[colorIdx]}`} />
                       </div>
 
@@ -211,11 +211,11 @@ export default function Services() {
                       <div className="flex items-center justify-between">
                         <div>
                           <span className="text-xs text-muted-foreground">{t(translations.services.priceFrom, lang)}</span>
-                          <div className="text-electric-green-dark font-bold text-base">
+                          <div className="text-primary font-bold text-base">
                             {service.priceRange}
                           </div>
                         </div>
-                        <button className="text-xs font-semibold text-electric-green-dark border border-electric-green/40 rounded-lg px-3 py-1.5 hover:bg-electric-green hover:text-navy transition-all duration-200">
+                        <button className="text-xs font-semibold text-primary border border-primary/40 rounded-lg px-3 py-1.5 hover:bg-primary hover:text-primary-foreground transition-all duration-200">
                           {t(translations.services.bookNow, lang)}
                         </button>
                       </div>

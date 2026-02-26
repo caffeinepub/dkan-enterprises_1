@@ -20,32 +20,32 @@ export default function Contact() {
       label: t(translations.contact.phone, lang),
       value: phone,
       href: `tel:${phone.replace(/\s/g, '')}`,
-      color: 'text-green-500',
-      bg: 'bg-green-500/10',
+      color: 'text-green-700',
+      bg: 'bg-green-100',
     },
     {
       icon: MapPin,
       label: t(translations.contact.address, lang),
       value: address,
       href: 'https://maps.google.com/?q=Kanpur,Uttar+Pradesh',
-      color: 'text-blue-500',
-      bg: 'bg-blue-500/10',
+      color: 'text-blue-700',
+      bg: 'bg-blue-100',
     },
     {
       icon: Clock,
       label: t(translations.contact.hours, lang),
       value: hours,
       href: null,
-      color: 'text-orange-500',
-      bg: 'bg-orange-500/10',
+      color: 'text-orange-700',
+      bg: 'bg-orange-100',
     },
     {
       icon: Mail,
       label: t(translations.contact.email, lang),
       value: 'dkanenterprises@gmail.com',
       href: 'mailto:dkanenterprises@gmail.com',
-      color: 'text-purple-500',
-      bg: 'bg-purple-500/10',
+      color: 'text-purple-700',
+      bg: 'bg-purple-100',
     },
   ];
 
@@ -54,8 +54,8 @@ export default function Contact() {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="text-center mb-14">
-          <div className="inline-flex items-center gap-2 bg-electric-green/10 border border-electric-green/30 rounded-full px-4 py-1.5 mb-4">
-            <span className="text-electric-green text-sm font-semibold">
+          <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/30 rounded-full px-4 py-1.5 mb-4">
+            <span className="text-primary text-sm font-semibold">
               🏛️ {t(translations.contact.upGovPartner, lang)}
             </span>
           </div>
@@ -76,7 +76,7 @@ export default function Contact() {
                   <item.icon className={`w-6 h-6 ${item.color}`} />
                 </div>
                 <div className="flex-1">
-                  <div className="text-muted-foreground text-xs font-medium uppercase tracking-wide mb-1">
+                  <div className="text-muted-foreground text-xs font-semibold uppercase tracking-wide mb-1">
                     {item.label}
                   </div>
                   {isLoading && (i === 0 || i === 1 || i === 2) ? (
@@ -86,7 +86,7 @@ export default function Contact() {
                       href={item.href}
                       target={item.href.startsWith('http') ? '_blank' : undefined}
                       rel={item.href.startsWith('http') ? 'noopener noreferrer' : undefined}
-                      className="font-semibold text-foreground hover:text-electric-green transition-colors duration-200"
+                      className="font-semibold text-foreground hover:text-primary transition-colors duration-200"
                     >
                       {item.value}
                     </a>
@@ -115,7 +115,7 @@ export default function Contact() {
           <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-navy-lg">
             <div className="p-4 border-b border-border">
               <h3 className="font-semibold text-foreground flex items-center gap-2">
-                <MapPin className="w-4 h-4 text-electric-green" />
+                <MapPin className="w-4 h-4 text-primary" />
                 {t(translations.contact.mapTitle, lang)}
               </h3>
             </div>

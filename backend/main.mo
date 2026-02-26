@@ -10,7 +10,6 @@ import Runtime "mo:core/Runtime";
 import AccessControl "authorization/access-control";
 import MixinAuthorization "authorization/MixinAuthorization";
 
-
 actor {
   let accessControlState = AccessControl.initState();
   include MixinAuthorization(accessControlState);
@@ -109,7 +108,6 @@ actor {
     businessHours : Text;
   };
 
-  // Defaults to hardcoded settings on first deployment
   var settings : Settings = {
     businessName = "JIVATRA Home Appliance Repair";
     contactPhone = "+91 90354 30990";
@@ -118,17 +116,14 @@ actor {
     businessHours = "Mon-Sat: 9am-7pm";
   };
 
-  // No auth check: admin dashboard is password-gated on the frontend only;
-  // the ICP caller is anonymous, so we must allow guest access to read settings.
   public query func getSettings() : async Settings {
     settings;
   };
 
-  // No auth check: admin dashboard uses a frontend password gate (AdminPasswordGate),
-  // not Internet Identity. The caller is therefore anonymous (guest). Backend auth
-  // checks would always fail for these callers, so authorization is enforced on
-  // the frontend only, consistent with all other admin dashboard write operations.
-  public shared func updateSettings(newSettings : Settings) : async () {
+  public shared ({ caller }) func updateSettings(newSettings : Settings) : async () {
+    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+      Runtime.trap("Unauthorized: Only admins can update settings");
+    };
     settings := newSettings;
   };
 
@@ -153,8 +148,25 @@ actor {
     userProfiles.add(caller, profile);
   };
 
-  // Anyone (including guests/anonymous) can create a booking
-  public shared ({ caller }) func createBooking(input : BookingInput) : async Nat {
+  // createBooking is open to all callers (guests can submit bookings from the public form)
+  public shared ({ caller }) func createBooking(input : BookingInput) : async Result<Nat, Text> {
+    // Validate input
+    if (input.customerName.isEmpty()) {
+      return #err("Customer name cannot be empty");
+    };
+    if (input.phoneNumber.isEmpty()) {
+      return #err("Phone number cannot be empty");
+    };
+    if (input.state.isEmpty()) {
+      return #err("State cannot be empty");
+    };
+    if (input.district.isEmpty()) {
+      return #err("District cannot be empty");
+    };
+    if (input.location.isEmpty()) {
+      return #err("Location cannot be empty");
+    };
+
     let bookingId = nextBookingId;
     nextBookingId += 1;
 
@@ -174,19 +186,17 @@ actor {
     };
 
     bookings.add(bookingId, newBooking);
-    bookingId;
+    #ok(bookingId);
   };
 
-  // Anyone can look up a booking by ID (e.g. to check their own booking status)
   public query func getBookingById(bookingId : Nat) : async ?BookingRecord {
     bookings.get(bookingId);
   };
 
-  // No auth check: admin dashboard uses a frontend password gate (AdminPasswordGate),
-  // not Internet Identity. The caller is therefore anonymous (guest). Backend auth
-  // checks would always fail for these callers, so authorization is enforced on
-  // the frontend only, consistent with all other admin dashboard operations.
-  public shared func updateBookingStatus(bookingId : Nat, newStatus : BookingStatus) : async () {
+  public shared ({ caller }) func updateBookingStatus(bookingId : Nat, newStatus : BookingStatus) : async () {
+    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+      Runtime.trap("Unauthorized: Only admins can update booking status");
+    };
     switch (bookings.get(bookingId)) {
       case (null) {
         Runtime.trap("Booking does not exist");
@@ -198,14 +208,17 @@ actor {
     };
   };
 
-  // No auth check: admin dashboard is password-gated on the frontend only;
-  // the ICP caller is anonymous, so we must allow guest access to read bookings.
-  public query func getAllBookings() : async [BookingRecord] {
+  public query ({ caller }) func getAllBookings() : async [BookingRecord] {
+    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+      Runtime.trap("Unauthorized: Only admins can view all bookings");
+    };
     bookings.values().toArray();
   };
 
-  // No auth check: same reasoning as getAllBookings — frontend password gate only.
-  public query func searchBookingsByCustomerName(name : Text) : async [BookingRecord] {
+  public query ({ caller }) func searchBookingsByCustomerName(name : Text) : async [BookingRecord] {
+    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+      Runtime.trap("Unauthorized: Only admins can search bookings");
+    };
     bookings.values().toArray().filter(
       func(b) {
         b.customerName.toLower().contains(#text(name.toLower()));
@@ -213,8 +226,10 @@ actor {
     );
   };
 
-  // No auth check: same reasoning as getAllBookings — frontend password gate only.
-  public query func getBookingsByStatus(status : BookingStatus) : async [BookingRecord] {
+  public query ({ caller }) func getBookingsByStatus(status : BookingStatus) : async [BookingRecord] {
+    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+      Runtime.trap("Unauthorized: Only admins can filter bookings by status");
+    };
     bookings.values().toArray().filter(
       func(b) {
         b.status == status;
@@ -222,8 +237,10 @@ actor {
     );
   };
 
-  // No auth check: same reasoning as getAllBookings — frontend password gate only.
-  public query func getBookingsByServiceType(serviceType : ServiceType) : async [BookingRecord] {
+  public query ({ caller }) func getBookingsByServiceType(serviceType : ServiceType) : async [BookingRecord] {
+    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+      Runtime.trap("Unauthorized: Only admins can filter bookings by service type");
+    };
     bookings.values().toArray().filter(
       func(b) {
         b.serviceType == serviceType;
@@ -231,8 +248,10 @@ actor {
     );
   };
 
-  // No auth check: same reasoning as getAllBookings — frontend password gate only.
-  public query func getBookingsByLocation(location : Text) : async [BookingRecord] {
+  public query ({ caller }) func getBookingsByLocation(location : Text) : async [BookingRecord] {
+    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+      Runtime.trap("Unauthorized: Only admins can filter bookings by location");
+    };
     bookings.values().toArray().filter(
       func(b) {
         b.location.toLower().contains(#text(location.toLower()));
@@ -240,11 +259,10 @@ actor {
     );
   };
 
-  // No auth check: admin dashboard uses a frontend password gate (AdminPasswordGate),
-  // not Internet Identity. The caller is therefore anonymous (guest). Backend auth
-  // checks would always fail for these callers, so authorization is enforced on
-  // the frontend only, consistent with all other admin dashboard write operations.
-  public shared func createService(input : ServiceInput) : async Result<Service, Text> {
+  public shared ({ caller }) func createService(input : ServiceInput) : async Result<Service, Text> {
+    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+      Runtime.trap("Unauthorized: Only admins can create services");
+    };
     let serviceId = nextServiceId;
     nextServiceId += 1;
 
@@ -262,11 +280,10 @@ actor {
     #ok(newService);
   };
 
-  // No auth check: admin dashboard uses a frontend password gate (AdminPasswordGate),
-  // not Internet Identity. The caller is therefore anonymous (guest). Backend auth
-  // checks would always fail for these callers, so authorization is enforced on
-  // the frontend only, consistent with all other admin dashboard write operations.
-  public shared func deleteService(id : Nat) : async Result<Bool, Text> {
+  public shared ({ caller }) func deleteService(id : Nat) : async Result<Bool, Text> {
+    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+      Runtime.trap("Unauthorized: Only admins can delete services");
+    };
     if (not services.containsKey(id)) {
       return #err("Service does not exist");
     };
@@ -279,12 +296,10 @@ actor {
     services.values().toArray();
   };
 
-  // Not currently in use in the frontend, but useful for later expansion
   public query func getServiceById(id : Nat) : async ?Service {
     services.get(id);
   };
 
-  // Not currently in use in the frontend, but useful for later expansion
   public query func getServicesByCategory(category : Text) : async [Service] {
     services.values().toArray().filter(
       func(service) {
@@ -293,7 +308,6 @@ actor {
     );
   };
 
-  // Not currently in use in the frontend, but useful for later expansion
   public query func searchServicesByName(name : Text) : async [Service] {
     services.values().toArray().filter(
       func(service) {
@@ -302,7 +316,10 @@ actor {
     );
   };
 
-  public query func getBookingsByState(state : Text) : async [BookingRecord] {
+  public query ({ caller }) func getBookingsByState(state : Text) : async [BookingRecord] {
+    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+      Runtime.trap("Unauthorized: Only admins can filter bookings by state");
+    };
     bookings.values().toArray().filter(
       func(b) {
         b.state.toLower().contains(#text(state.toLower()));
@@ -310,7 +327,10 @@ actor {
     );
   };
 
-  public query func getBookingsByDistrict(district : Text) : async [BookingRecord] {
+  public query ({ caller }) func getBookingsByDistrict(district : Text) : async [BookingRecord] {
+    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+      Runtime.trap("Unauthorized: Only admins can filter bookings by district");
+    };
     bookings.values().toArray().filter(
       func(b) {
         b.district.toLower().contains(#text(district.toLower()));
@@ -318,7 +338,6 @@ actor {
     );
   };
 
-  // Returns all districts for a given state
   public query func getDistrictsByState(state : Text) : async [Text] {
     switch (districtMappings.get(state)) {
       case (null) { [] };
@@ -326,7 +345,6 @@ actor {
     };
   };
 
-  // District mappings for each state
   let districtMappings = Map.fromIter([
     (
       "gujarat",

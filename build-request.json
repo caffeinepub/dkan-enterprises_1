@@ -1,39 +1,71 @@
 {
   "kind": "build_request",
-  "title": "Fix SevaMitra App Download Link",
-  "projectName": "DKAN SevaMitra",
+  "title": "Fix booking form error message display",
   "priority": "high",
   "requirements": [
     {
-      "id": "REQ-2",
-      "text": "Fix the SevaMitra app download link/button so that users can successfully download or be redirected to the SevaMitra app. Inspect the SevaMitraBadge component and any other places where the SevaMitra download link appears (Hero, Footer, inline badge variants) and ensure the URL is correct, the link opens properly, and the button/badge is functional and clickable.",
+      "id": "REQ-1",
+      "text": "Investigate and fix the error that appears during the booking submission flow. Ensure that when a booking fails (validation error, backend error, or network issue), a clear, user-friendly error message is displayed in both Hindi and English. When a booking succeeds, show a proper success confirmation message instead of an error.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-6"
+          "msg-latest"
         ],
         "quotes": [
-          "अब सेवामित्र ऐप डौनलोड नही हो रहा है क्र्पया इसे सही करे"
+          "बुकिंग मे ही त्रुटि एरर मेसेज"
         ]
       },
       "acceptanceCriteria": [
-        "Clicking the SevaMitra app download badge/button in the Hero section opens a valid, working download or store link.",
-        "Clicking the SevaMitra app download badge/button in the Footer section opens a valid, working download or store link.",
-        "The SevaMitra inline badge variant also links correctly.",
-        "The link does not result in a 404, broken page, or no-action outcome.",
-        "The download link/button is visible and clearly tappable on both desktop and mobile viewports."
+        "Submitting the booking form does not show a spurious or unhandled error message on a successful booking",
+        "If a real error occurs (backend rejection, validation failure), a descriptive error message is displayed to the user in the current language (Hindi/English)",
+        "On successful booking submission, a success confirmation message is shown and no error message is visible",
+        "The BookingForm component handles Promise rejections and actor call failures gracefully without crashing",
+        "Error and success messages use the existing bilingual translations from translations.ts"
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "text": "Add or update bilingual translation strings in translations.ts for booking error and success states, covering: generic submission error, network/backend unavailable error, and booking confirmation success message — in both Hindi and English.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-latest"
+        ],
+        "quotes": [
+          "बुकिंग मे ही त्रुटि एरर मेसेज"
+        ]
+      },
+      "acceptanceCriteria": [
+        "translations.ts contains keys for bookingSuccess, bookingError, and bookingNetworkError in both Hindi and English",
+        "BookingForm renders these translated strings dynamically based on the active language context"
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "text": "Review the backend createBooking or equivalent booking mutation endpoint in main.mo to ensure it returns a proper error variant (e.g., #err) when booking creation fails, so the frontend can distinguish success from failure reliably.",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-latest"
+        ],
+        "quotes": [
+          "बुकिंग मे ही त्रुटि एरर मेसेज"
+        ]
+      },
+      "acceptanceCriteria": [
+        "The booking creation function returns a Result type (#ok / #err) with a descriptive error message string on failure",
+        "The frontend receives a typed error response and can display the appropriate message to the user"
       ]
     }
   ],
   "constraints": [
-    "Do not modify files under frontend/src/hooks/ (immutable paths).",
-    "Do not modify frontend/src/components/ui/ (immutable paths).",
-    "Do not alter the overall site design or layout beyond fixing the download link."
+    "Do not modify files under frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, or frontend/src/components/ui",
+    "Preserve existing bilingual (Hindi/English) support throughout all changes"
   ],
   "nonGoals": [
-    "Changing the visual design of the SevaMitra badge.",
-    "Adding a new download page or route.",
-    "Backend changes."
+    "Redesigning the booking form UI or layout",
+    "Adding new booking form fields",
+    "Changes to admin dashboard booking display logic"
   ],
   "imageRequirements": {
     "required": [],

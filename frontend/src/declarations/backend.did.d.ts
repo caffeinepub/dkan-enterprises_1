@@ -44,6 +44,8 @@ export type Result = { 'ok' : boolean } |
   { 'err' : string };
 export type Result_1 = { 'ok' : Service } |
   { 'err' : string };
+export type Result_2 = { 'ok' : bigint } |
+  { 'err' : string };
 export interface Service {
   'id' : bigint,
   'descriptionHindi' : string,
@@ -86,7 +88,7 @@ export type UserRole = { 'admin' : null } |
 export interface _SERVICE {
   '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
-  'createBooking' : ActorMethod<[BookingInput], bigint>,
+  'createBooking' : ActorMethod<[BookingInput], Result_2>,
   'createService' : ActorMethod<[ServiceInput], Result_1>,
   'deleteService' : ActorMethod<[bigint], Result>,
   'getAllBookings' : ActorMethod<[], Array<BookingRecord>>,

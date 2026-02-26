@@ -38,6 +38,7 @@ export const BookingInput = IDL.Record({
   'location' : IDL.Text,
   'timeSlot' : TimeSlot,
 });
+export const Result_2 = IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text });
 export const ServiceInput = IDL.Record({
   'descriptionHindi' : IDL.Text,
   'nameHindi' : IDL.Text,
@@ -94,7 +95,7 @@ export const Settings = IDL.Record({
 export const idlService = IDL.Service({
   '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
-  'createBooking' : IDL.Func([BookingInput], [IDL.Nat], []),
+  'createBooking' : IDL.Func([BookingInput], [Result_2], []),
   'createService' : IDL.Func([ServiceInput], [Result_1], []),
   'deleteService' : IDL.Func([IDL.Nat], [Result], []),
   'getAllBookings' : IDL.Func([], [IDL.Vec(BookingRecord)], ['query']),
@@ -181,6 +182,7 @@ export const idlFactory = ({ IDL }) => {
     'location' : IDL.Text,
     'timeSlot' : TimeSlot,
   });
+  const Result_2 = IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text });
   const ServiceInput = IDL.Record({
     'descriptionHindi' : IDL.Text,
     'nameHindi' : IDL.Text,
@@ -234,7 +236,7 @@ export const idlFactory = ({ IDL }) => {
   return IDL.Service({
     '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
-    'createBooking' : IDL.Func([BookingInput], [IDL.Nat], []),
+    'createBooking' : IDL.Func([BookingInput], [Result_2], []),
     'createService' : IDL.Func([ServiceInput], [Result_1], []),
     'deleteService' : IDL.Func([IDL.Nat], [Result], []),
     'getAllBookings' : IDL.Func([], [IDL.Vec(BookingRecord)], ['query']),
