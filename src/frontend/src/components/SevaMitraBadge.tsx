@@ -1,22 +1,25 @@
-import { useLanguage } from '../hooks/useLanguage';
+import { useLanguage } from "../hooks/useLanguage";
 
 interface SevaMitraBadgeProps {
-  variant?: 'hero' | 'footer' | 'inline';
+  variant?: "hero" | "footer" | "inline";
 }
 
 // Official UP SevaMitra app on Google Play Store
-const SEVAMITRA_APP_URL = 'https://play.google.com/store/apps/details?id=com.digitalcorn.sewamitra';
+const SEVAMITRA_APP_URL =
+  "https://play.google.com/store/apps/details?id=com.digitalcorn.sewamitra";
 
-export default function SevaMitraBadge({ variant = 'inline' }: SevaMitraBadgeProps) {
+export default function SevaMitraBadge({
+  variant = "inline",
+}: SevaMitraBadgeProps) {
   const { lang } = useLanguage();
 
-  if (variant === 'hero') {
+  if (variant === "hero") {
     return (
       <div className="inline-flex flex-col items-center gap-2">
         <p className="text-white/80 text-xs font-devanagari">
-          {lang === 'hi'
-            ? 'DKAN ENTERPRISES की सर्विस बुक करने के लिये'
-            : 'Book DKAN ENTERPRISES services via'}
+          {lang === "hi"
+            ? "DKAN ENTERPRISES की सर्विस बुक करने के लिये"
+            : "Book DKAN ENTERPRISES services via"}
         </p>
         <a
           href={SEVAMITRA_APP_URL}
@@ -30,9 +33,13 @@ export default function SevaMitraBadge({ variant = 'inline' }: SevaMitraBadgePro
             className="h-8 w-8 rounded-lg object-cover"
           />
           <div className="text-left">
-            <p className="text-xs font-bold uppercase tracking-wide leading-tight">SevaMitra App</p>
+            <p className="text-xs font-bold uppercase tracking-wide leading-tight">
+              SevaMitra App
+            </p>
             <p className="text-xs font-devanagari font-bold leading-tight">
-              {lang === 'hi' ? 'उत्तर प्रदेश का सेवामित्र ऐप डाउनलोड करे' : 'Download UP SevaMitra App'}
+              {lang === "hi"
+                ? "उत्तर प्रदेश का सेवामित्र ऐप डाउनलोड करे"
+                : "Download UP SevaMitra App"}
             </p>
           </div>
         </a>
@@ -40,7 +47,7 @@ export default function SevaMitraBadge({ variant = 'inline' }: SevaMitraBadgePro
     );
   }
 
-  if (variant === 'footer') {
+  if (variant === "footer") {
     return (
       <a
         href={SEVAMITRA_APP_URL}
@@ -56,9 +63,9 @@ export default function SevaMitraBadge({ variant = 'inline' }: SevaMitraBadgePro
         <div>
           <p className="text-xs font-bold leading-tight">SevaMitra App</p>
           <p className="text-xs font-devanagari font-semibold leading-tight">
-            {lang === 'hi'
-              ? 'सेवामित्र ऐप डाउनलोड करे'
-              : 'Download UP SevaMitra App'}
+            {lang === "hi"
+              ? "सेवामित्र ऐप डाउनलोड करे"
+              : "Download UP SevaMitra App"}
           </p>
         </div>
       </a>
@@ -79,9 +86,7 @@ export default function SevaMitraBadge({ variant = 'inline' }: SevaMitraBadgePro
         className="h-5 w-5 rounded object-cover"
       />
       <span className="text-xs font-devanagari font-bold">
-        {lang === 'hi'
-          ? 'सेवामित्र ऐप डाउनलोड करे'
-          : 'Download UP SevaMitra App'}
+        {lang === "hi" ? "सेवामित्र ऐप डाउनलोड करे" : "Download UP SevaMitra App"}
       </span>
     </a>
   );

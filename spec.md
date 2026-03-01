@@ -1,14 +1,22 @@
-# Specification
+# DKAN Enterprises
 
-## Summary
-**Goal:** Fix the booking form so that errors and successes are handled and displayed correctly in both Hindi and English.
+## Current State
+Full-stack service booking website for DKAN Enterprises (Kanpur, UP). Features: Hindi/English bilingual UI, booking form with All-India state/district selection, admin dashboard with bookings/services/settings management, WhatsApp floating button, SevaMitra partner badge.
 
-**Planned changes:**
-- Investigate and fix the BookingForm component to correctly handle Promise rejections and actor call failures without crashing or showing spurious error messages
-- On successful booking submission, display a proper success confirmation message and no error message
-- On booking failure (validation, backend, or network error), display a clear, user-friendly error message in the active language (Hindi/English)
-- Add/update bilingual translation strings in `translations.ts` for `bookingSuccess`, `bookingError`, and `bookingNetworkError` in both Hindi and English
-- Update the BookingForm to render these translated strings dynamically based on the active language context
-- Review and update the backend `createBooking` (or equivalent) function in `main.mo` to return a `Result` type (`#ok` / `#err`) with a descriptive error message string on failure
+**Core bug:** `access-control.mo` `getUserRole` function calls `Runtime.trap("User is not registered")` when a principal is not found in userRoles map. This causes `hasPermission` to throw an error instead of returning `false`, so `getAllBookings` and other admin queries fail with an authorization error even after successful Internet Identity login and `_initializeAccessControlWithSecret` call.
 
-**User-visible outcome:** Users submitting the booking form will see a clear success message on successful booking, and a descriptive bilingual error message when something goes wrong — with no unhandled or misleading error messages appearing.
+## Requested Changes (Diff)
+
+### Add
+- Nothing new
+
+### Modify
+- Fix `getUserRole` in access-control.mo: when principal is not in userRoles map, return `#guest` instead of calling `Runtime.trap`. This ensures `hasPermission` correctly returns `false` for unregistered principals instead of throwing.
+
+### Remove
+- Nothing
+
+## Implementation Plan
+1. Regenerate backend Motoko code with the access-control bug fixed: `getUserRole` returns `#guest` for unregistered (non-anonymous) principals instead of trapping.
+2. Keep all existing backend functions identical (bookings, services, settings, authorization).
+3. No frontend changes needed.

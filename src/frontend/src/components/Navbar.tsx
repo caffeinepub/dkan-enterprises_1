@@ -1,18 +1,18 @@
-import { useState } from 'react';
-import { useLanguage } from '../hooks/useLanguage';
-import { useRouter } from '@tanstack/react-router';
+import { useRouter } from "@tanstack/react-router";
+import { useState } from "react";
+import { useLanguage } from "../hooks/useLanguage";
 
 export default function Navbar() {
   const { lang, toggleLang } = useLanguage();
   const [menuOpen, setMenuOpen] = useState(false);
   const router = useRouter();
 
-  const isAdmin = router.state.location.pathname === '/admin';
+  const isAdmin = router.state.location.pathname === "/admin";
 
   const navLinks = [
-    { href: '#services', labelEn: 'Services', labelHi: 'सेवाएं' },
-    { href: '#booking', labelEn: 'Book Now', labelHi: 'बुक करें' },
-    { href: '#contact', labelEn: 'Contact', labelHi: 'संपर्क' },
+    { href: "#services", labelEn: "Services", labelHi: "सेवाएं" },
+    { href: "#booking", labelEn: "Book Now", labelHi: "बुक करें" },
+    { href: "#contact", labelEn: "Contact", labelHi: "संपर्क" },
   ];
 
   return (
@@ -26,21 +26,25 @@ export default function Navbar() {
             className="h-10 w-10 rounded-full object-cover border-2 border-electric"
           />
           <div>
-            <p className="text-white font-bold text-sm font-poppins leading-tight">DKAN ENTERPRISES</p>
-            <p className="text-electric text-xs font-devanagari leading-tight">होम अप्लायंस रिपेयर</p>
+            <p className="text-white font-bold text-sm font-poppins leading-tight">
+              DKAN ENTERPRISES
+            </p>
+            <p className="text-electric text-xs font-devanagari leading-tight">
+              होम अप्लायंस रिपेयर
+            </p>
           </div>
         </a>
 
         {/* Desktop Nav */}
         {!isAdmin && (
           <div className="hidden md:flex items-center gap-6">
-            {navLinks.map(link => (
+            {navLinks.map((link) => (
               <a
                 key={link.href}
                 href={link.href}
                 className="text-gray-300 hover:text-electric transition-colors text-sm font-medium font-devanagari"
               >
-                {lang === 'hi' ? link.labelHi : link.labelEn}
+                {lang === "hi" ? link.labelHi : link.labelEn}
               </a>
             ))}
           </div>
@@ -49,10 +53,11 @@ export default function Navbar() {
         {/* Right side */}
         <div className="flex items-center gap-3">
           <button
+            type="button"
             onClick={toggleLang}
             className="text-xs bg-electric/20 text-electric border border-electric/30 px-3 py-1.5 rounded-full hover:bg-electric/30 transition-colors font-poppins"
           >
-            {lang === 'hi' ? 'EN' : 'हिं'}
+            {lang === "hi" ? "EN" : "हिं"}
           </button>
 
           {!isAdmin && (
@@ -60,20 +65,27 @@ export default function Navbar() {
               href="/admin"
               className="hidden md:block text-xs text-gray-400 hover:text-white transition-colors"
             >
-              {lang === 'hi' ? 'एडमिन' : 'Admin'}
+              {lang === "hi" ? "एडमिन" : "Admin"}
             </a>
           )}
 
           {/* Mobile hamburger */}
           {!isAdmin && (
             <button
+              type="button"
               onClick={() => setMenuOpen(!menuOpen)}
               className="md:hidden text-white p-1"
               aria-label="Toggle menu"
             >
-              <div className={`w-5 h-0.5 bg-white transition-all mb-1 ${menuOpen ? 'rotate-45 translate-y-1.5' : ''}`}></div>
-              <div className={`w-5 h-0.5 bg-white transition-all mb-1 ${menuOpen ? 'opacity-0' : ''}`}></div>
-              <div className={`w-5 h-0.5 bg-white transition-all ${menuOpen ? '-rotate-45 -translate-y-1.5' : ''}`}></div>
+              <div
+                className={`w-5 h-0.5 bg-white transition-all mb-1 ${menuOpen ? "rotate-45 translate-y-1.5" : ""}`}
+              />
+              <div
+                className={`w-5 h-0.5 bg-white transition-all mb-1 ${menuOpen ? "opacity-0" : ""}`}
+              />
+              <div
+                className={`w-5 h-0.5 bg-white transition-all ${menuOpen ? "-rotate-45 -translate-y-1.5" : ""}`}
+              />
             </button>
           )}
         </div>
@@ -82,18 +94,21 @@ export default function Navbar() {
       {/* Mobile Menu */}
       {menuOpen && !isAdmin && (
         <div className="md:hidden bg-navy border-t border-white/10 px-4 py-3 space-y-2">
-          {navLinks.map(link => (
+          {navLinks.map((link) => (
             <a
               key={link.href}
               href={link.href}
               onClick={() => setMenuOpen(false)}
               className="block text-gray-300 hover:text-electric py-2 text-sm font-devanagari"
             >
-              {lang === 'hi' ? link.labelHi : link.labelEn}
+              {lang === "hi" ? link.labelHi : link.labelEn}
             </a>
           ))}
-          <a href="/admin" className="block text-gray-400 hover:text-white py-2 text-xs">
-            {lang === 'hi' ? 'एडमिन पैनल' : 'Admin Panel'}
+          <a
+            href="/admin"
+            className="block text-gray-400 hover:text-white py-2 text-xs"
+          >
+            {lang === "hi" ? "एडमिन पैनल" : "Admin Panel"}
           </a>
         </div>
       )}

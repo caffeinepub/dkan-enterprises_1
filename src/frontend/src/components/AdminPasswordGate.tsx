@@ -1,37 +1,65 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Eye, EyeOff, Lock, Shield, LogIn, Loader2 } from 'lucide-react';
-import { useInternetIdentity } from '../hooks/useInternetIdentity';
-import { useQueryClient } from '@tanstack/react-query';
-import { useInitializeAdmin } from '../hooks/useQueries';
+import { useQueryClient } from "@tanstack/react-query";
+import { Eye, EyeOff, Loader2, Lock, LogIn, Shield } from "lucide-react";
+import type React from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useInternetIdentity } from "../hooks/useInternetIdentity";
+import { useInitializeAdmin } from "../hooks/useQueries";
 
 interface AdminPasswordGateProps {
   onAuthenticated: () => void;
 }
 
-const ADMIN_PASSWORD = 'admin123';
-const SESSION_KEY = 'admin_authenticated';
+const ADMIN_PASSWORD = "admin123";
+const SESSION_KEY = "admin_authenticated";
 
-export default function AdminPasswordGate({ onAuthenticated }: AdminPasswordGateProps) {
-  const [password, setPassword] = useState('');
+export default function AdminPasswordGate({
+  onAuthenticated,
+}: AdminPasswordGateProps) {
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [passwordVerified, setPasswordVerified] = useState(false);
   const [isSettingUp, setIsSettingUp] = useState(false);
   const hasInitialized = useRef(false);
 
-  const { login, clear, loginStatus, identity, isInitializing } = useInternetIdentity();
+  const { login, clear, loginStatus, identity, isInitializing } =
+    useInternetIdentity();
   const queryClient = useQueryClient();
   const initializeAdmin = useInitializeAdmin();
 
-  const isLoggingIn = loginStatus === 'logging-in';
+  const isLoggingIn = loginStatus === "logging-in";
   const isAuthenticated = !!identity;
+
+  // Store latest references in refs so the effect deps are stable
+  const initializeMutateRef = useRef(initializeAdmin.mutate);
+  const onAuthenticatedRef = useRef(onAuthenticated);
+  useEffect(() => {
+    initializeMutateRef.current = initializeAdmin.mutate;
+  });
+  useEffect(() => {
+    onAuthenticatedRef.current = onAuthenticated;
+  });
 
   // Check session storage for password verification
   useEffect(() => {
     const stored = sessionStorage.getItem(SESSION_KEY);
-    if (stored === 'true') {
+    if (stored === "true") {
       setPasswordVerified(true);
     }
+  }, []);
+
+  // Stable callbacks that always call the latest ref values
+  const stableInitializeMutate = useCallback(
+    (
+      password: string,
+      options: Parameters<typeof initializeAdmin.mutate>[1],
+    ) => {
+      initializeMutateRef.current(password, options);
+    },
+    [],
+  );
+  const stableOnAuthenticated = useCallback(() => {
+    onAuthenticatedRef.current();
   }, []);
 
   // Once both password verified AND identity present, initialize admin then call onAuthenticated
@@ -39,27 +67,34 @@ export default function AdminPasswordGate({ onAuthenticated }: AdminPasswordGate
     if (passwordVerified && isAuthenticated && !hasInitialized.current) {
       hasInitialized.current = true;
       setIsSettingUp(true);
-      initializeAdmin.mutate(ADMIN_PASSWORD, {
+      stableInitializeMutate(ADMIN_PASSWORD, {
         onSettled: () => {
-          // Whether success or already-registered error, proceed to dashboard
-          setIsSettingUp(false);
-          onAuthenticated();
+          // Whether success or already-registered error, wait briefly for
+          // backend to process registration before loading the dashboard.
+          setTimeout(() => {
+            setIsSettingUp(false);
+            stableOnAuthenticated();
+          }, 800);
         },
       });
     }
-    // We intentionally omit initializeAdmin.mutate and onAuthenticated from deps
-    // to avoid re-triggering on every render; hasInitialized.current guards against duplication
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [passwordVerified, isAuthenticated]);
+  }, [
+    passwordVerified,
+    isAuthenticated,
+    stableInitializeMutate,
+    stableOnAuthenticated,
+  ]);
 
   const handlePasswordSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (password.trim() === ADMIN_PASSWORD) {
-      sessionStorage.setItem(SESSION_KEY, 'true');
+      sessionStorage.setItem(SESSION_KEY, "true");
       setPasswordVerified(true);
-      setError('');
+      setError("");
     } else {
-      setError('गलत पासवर्ड। कृपया पुनः प्रयास करें। / Wrong password. Please try again.');
+      setError(
+        "गलत पासवर्ड। कृपया पुनः प्रयास करें। / Wrong password. Please try again.",
+      );
     }
   };
 
@@ -67,8 +102,8 @@ export default function AdminPasswordGate({ onAuthenticated }: AdminPasswordGate
     try {
       await login();
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : '';
-      if (message === 'User is already authenticated') {
+      const message = err instanceof Error ? err.message : "";
+      if (message === "User is already authenticated") {
         await clear();
         queryClient.clear();
         setTimeout(() => login(), 300);
@@ -99,8 +134,12 @@ export default function AdminPasswordGate({ onAuthenticated }: AdminPasswordGate
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
           <Loader2 className="w-8 h-8 animate-spin text-primary" />
-          <p className="text-foreground font-medium text-sm">Setting up admin access...</p>
-          <p className="text-muted-foreground text-xs">एडमिन एक्सेस सेट हो रहा है...</p>
+          <p className="text-foreground font-medium text-sm">
+            Setting up admin access...
+          </p>
+          <p className="text-muted-foreground text-xs">
+            एडमिन एक्सेस सेट हो रहा है...
+          </p>
         </div>
       </div>
     );
@@ -116,7 +155,9 @@ export default function AdminPasswordGate({ onAuthenticated }: AdminPasswordGate
               <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
                 <Lock className="w-8 h-8 text-primary" />
               </div>
-              <h1 className="text-2xl font-bold text-foreground text-center">Admin Access</h1>
+              <h1 className="text-2xl font-bold text-foreground text-center">
+                Admin Access
+              </h1>
               <p className="text-muted-foreground text-sm text-center mt-1">
                 एडमिन पैनल में प्रवेश करें / Enter Admin Panel
               </p>
@@ -133,7 +174,7 @@ export default function AdminPasswordGate({ onAuthenticated }: AdminPasswordGate
                 <div className="relative">
                   <input
                     id="admin-password"
-                    type={showPassword ? 'text' : 'password'}
+                    type={showPassword ? "text" : "password"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Enter admin password"
@@ -144,7 +185,11 @@ export default function AdminPasswordGate({ onAuthenticated }: AdminPasswordGate
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                   >
-                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    {showPassword ? (
+                      <EyeOff className="w-5 h-5" />
+                    ) : (
+                      <Eye className="w-5 h-5" />
+                    )}
                   </button>
                 </div>
               </div>
@@ -178,15 +223,19 @@ export default function AdminPasswordGate({ onAuthenticated }: AdminPasswordGate
               <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
                 <Shield className="w-8 h-8 text-primary" />
               </div>
-              <h1 className="text-2xl font-bold text-foreground text-center">Identity Verification</h1>
+              <h1 className="text-2xl font-bold text-foreground text-center">
+                Identity Verification
+              </h1>
               <p className="text-muted-foreground text-sm text-center mt-2">
                 बुकिंग देखने के लिए Internet Identity से लॉगिन करें।
               </p>
               <p className="text-muted-foreground text-xs text-center mt-1">
-                Login with Internet Identity to access bookings and admin features.
+                Login with Internet Identity to access bookings and admin
+                features.
               </p>
               <p className="mt-3 px-3 py-2 bg-primary/10 text-primary text-xs text-center rounded-lg font-medium">
-                पहली बार लॉगिन पर आप स्वतः एडमिन बन जाएंगे।<br />
+                पहली बार लॉगिन पर आप स्वतः एडमिन बन जाएंगे।
+                <br />
                 On first login, you will automatically become admin.
               </p>
             </div>

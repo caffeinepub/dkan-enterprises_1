@@ -1,14 +1,20 @@
-import React from 'react';
-import { createRouter, createRoute, createRootRoute, RouterProvider, Outlet } from '@tanstack/react-router';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ThemeProvider } from 'next-themes';
-import { Toaster } from '@/components/ui/sonner';
-import { LanguageProvider } from './hooks/useLanguage';
-import Navbar from './components/Navbar';
-import Footer from './components/Footer';
-import HomePage from './pages/HomePage';
-import AdminDashboard from './pages/AdminDashboard';
-import AdminPasswordGate from './components/AdminPasswordGate';
+import { Toaster } from "@/components/ui/sonner";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import {
+  Outlet,
+  RouterProvider,
+  createRootRoute,
+  createRoute,
+  createRouter,
+} from "@tanstack/react-router";
+import { ThemeProvider } from "next-themes";
+import React from "react";
+import AdminPasswordGate from "./components/AdminPasswordGate";
+import Footer from "./components/Footer";
+import Navbar from "./components/Navbar";
+import { LanguageProvider } from "./hooks/useLanguage";
+import AdminDashboard from "./pages/AdminDashboard";
+import HomePage from "./pages/HomePage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -34,20 +40,21 @@ function RootLayout() {
 
 // Admin page — password gate + identity login required
 function AdminPage() {
-  const [authenticated, setAuthenticated] = React.useState(() => {
-    return sessionStorage.getItem('admin_authenticated') === 'true';
-  });
+  const [authenticated, setAuthenticated] = React.useState(false);
+  const [isAdminReady, setIsAdminReady] = React.useState(false);
 
   // Re-check when identity changes (after login)
   const handleAuthenticated = React.useCallback(() => {
     setAuthenticated(true);
+    // Give the backend a moment to settle before enabling bookings query
+    setTimeout(() => setIsAdminReady(true), 500);
   }, []);
 
   if (!authenticated) {
     return <AdminPasswordGate onAuthenticated={handleAuthenticated} />;
   }
 
-  return <AdminDashboard />;
+  return <AdminDashboard isAdminReady={isAdminReady} />;
 }
 
 // Routes
@@ -55,13 +62,13 @@ const rootRoute = createRootRoute({ component: RootLayout });
 
 const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/',
+  path: "/",
   component: HomePage,
 });
 
 const adminRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/admin',
+  path: "/admin",
   component: AdminPage,
 });
 

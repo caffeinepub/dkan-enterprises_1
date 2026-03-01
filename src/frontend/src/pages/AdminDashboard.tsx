@@ -1,62 +1,85 @@
-import React, { useState } from 'react';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useQueryClient } from "@tanstack/react-query";
 import {
-  useGetAllBookings,
-  useUpdateBookingStatus,
-  useGetAllServices,
-  useCreateService,
-  useDeleteService,
-  useGetSettings,
-  useUpdateSettings,
-} from '../hooks/useQueries';
-import { BookingStatus } from '../backend';
-import type { BookingRecord, Settings } from '../backend';
-import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Skeleton } from '@/components/ui/skeleton';
-import {
+  AlertCircle,
   Calendar,
-  Phone,
-  MapPin,
+  CheckCircle,
+  ClipboardList,
   Clock,
+  Loader2,
+  LogOut,
+  MapPin,
+  Package,
+  Phone,
+  Plus,
+  RefreshCw,
+  Settings as SettingsIcon,
+  Trash2,
   User,
   Wrench,
-  RefreshCw,
-  AlertCircle,
-  CheckCircle,
   XCircle,
-  Loader2,
-  Plus,
-  Trash2,
-  Settings as SettingsIcon,
-  ClipboardList,
-  Package,
-  LogOut,
-} from 'lucide-react';
-import { useInternetIdentity } from '../hooks/useInternetIdentity';
-import { useQueryClient } from '@tanstack/react-query';
+} from "lucide-react";
+import React, { useState } from "react";
+import { BookingStatus } from "../backend";
+import type { BookingRecord, Settings } from "../backend";
+import { useInternetIdentity } from "../hooks/useInternetIdentity";
+import {
+  useCreateService,
+  useDeleteService,
+  useGetAllBookings,
+  useGetAllServices,
+  useGetSettings,
+  useUpdateBookingStatus,
+  useUpdateSettings,
+} from "../hooks/useQueries";
 
 const serviceTypeLabels: Record<string, string> = {
-  acRepair: 'AC Repair / एसी मरम्मत',
-  washingMachineRepair: 'Washing Machine / वाशिंग मशीन',
-  refrigeratorRepair: 'Refrigerator / रेफ्रिजरेटर',
-  microwaveRepair: 'Microwave / माइक्रोवेव',
-  geyserRepair: 'Geyser / गीज़र',
-  lcdLedTvRepair: 'LCD/LED TV',
-  waterPurifier: 'Water Purifier / वाटर प्यूरीफायर',
+  acRepair: "AC Repair / एसी मरम्मत",
+  washingMachineRepair: "Washing Machine / वाशिंग मशीन",
+  refrigeratorRepair: "Refrigerator / रेफ्रिजरेटर",
+  microwaveRepair: "Microwave / माइक्रोवेव",
+  geyserRepair: "Geyser / गीज़र",
+  lcdLedTvRepair: "LCD/LED TV",
+  waterPurifier: "Water Purifier / वाटर प्यूरीफायर",
 };
 
 const timeSlotLabels: Record<string, string> = {
-  morning_9_12: '9 AM – 12 PM',
-  afternoon_12_4: '12 PM – 4 PM',
-  evening_4_7: '4 PM – 7 PM',
+  morning_9_12: "9 AM – 12 PM",
+  afternoon_12_4: "12 PM – 4 PM",
+  evening_4_7: "4 PM – 7 PM",
 };
 
-const statusConfig: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
-  pending: { label: 'Pending / लंबित', color: 'bg-yellow-100 text-yellow-800 border-yellow-200', icon: <Clock className="w-3 h-3" /> },
-  confirmed: { label: 'Confirmed / पुष्टि', color: 'bg-blue-100 text-blue-800 border-blue-200', icon: <CheckCircle className="w-3 h-3" /> },
-  inProgress: { label: 'In Progress / प्रगति में', color: 'bg-purple-100 text-purple-800 border-purple-200', icon: <Wrench className="w-3 h-3" /> },
-  completed: { label: 'Completed / पूर्ण', color: 'bg-green-100 text-green-800 border-green-200', icon: <CheckCircle className="w-3 h-3" /> },
-  cancelled: { label: 'Cancelled / रद्द', color: 'bg-red-100 text-red-800 border-red-200', icon: <XCircle className="w-3 h-3" /> },
+const statusConfig: Record<
+  string,
+  { label: string; color: string; icon: React.ReactNode }
+> = {
+  pending: {
+    label: "Pending / लंबित",
+    color: "bg-yellow-100 text-yellow-800 border-yellow-200",
+    icon: <Clock className="w-3 h-3" />,
+  },
+  confirmed: {
+    label: "Confirmed / पुष्टि",
+    color: "bg-blue-100 text-blue-800 border-blue-200",
+    icon: <CheckCircle className="w-3 h-3" />,
+  },
+  inProgress: {
+    label: "In Progress / प्रगति में",
+    color: "bg-purple-100 text-purple-800 border-purple-200",
+    icon: <Wrench className="w-3 h-3" />,
+  },
+  completed: {
+    label: "Completed / पूर्ण",
+    color: "bg-green-100 text-green-800 border-green-200",
+    icon: <CheckCircle className="w-3 h-3" />,
+  },
+  cancelled: {
+    label: "Cancelled / रद्द",
+    color: "bg-red-100 text-red-800 border-red-200",
+    icon: <XCircle className="w-3 h-3" />,
+  },
 };
 
 // BookingStatus is a string enum, so String(status) gives the key directly.
@@ -67,7 +90,7 @@ function getStatusKey(status: BookingStatus): string {
 function BookingCard({ booking }: { booking: BookingRecord }) {
   const { mutate: updateStatus, isPending } = useUpdateBookingStatus();
   const statusKey = getStatusKey(booking.status);
-  const cfg = statusConfig[statusKey] ?? statusConfig['pending'];
+  const cfg = statusConfig[statusKey] ?? statusConfig.pending;
 
   const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const val = e.target.value as BookingStatus;
@@ -79,8 +102,12 @@ function BookingCard({ booking }: { booking: BookingRecord }) {
       <div className="flex items-start justify-between gap-3 mb-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-xs text-muted-foreground font-mono">#{String(booking.id)}</span>
-            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border ${cfg.color}`}>
+            <span className="text-xs text-muted-foreground font-mono">
+              #{String(booking.id)}
+            </span>
+            <span
+              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border ${cfg.color}`}
+            >
               {cfg.icon}
               {cfg.label}
             </span>
@@ -91,7 +118,9 @@ function BookingCard({ booking }: { booking: BookingRecord }) {
           </h3>
         </div>
         <div className="flex items-center gap-2">
-          {isPending && <Loader2 className="w-4 h-4 animate-spin text-primary" />}
+          {isPending && (
+            <Loader2 className="w-4 h-4 animate-spin text-primary" />
+          )}
           <select
             value={statusKey}
             onChange={handleStatusChange}
@@ -114,7 +143,10 @@ function BookingCard({ booking }: { booking: BookingRecord }) {
         </div>
         <div className="flex items-center gap-2 text-muted-foreground">
           <Wrench className="w-4 h-4 shrink-0" />
-          <span>{serviceTypeLabels[String(booking.serviceType)] ?? String(booking.serviceType)}</span>
+          <span>
+            {serviceTypeLabels[String(booking.serviceType)] ??
+              String(booking.serviceType)}
+          </span>
         </div>
         <div className="flex items-center gap-2 text-muted-foreground">
           <Calendar className="w-4 h-4 shrink-0" />
@@ -122,14 +154,17 @@ function BookingCard({ booking }: { booking: BookingRecord }) {
         </div>
         <div className="flex items-center gap-2 text-muted-foreground">
           <Clock className="w-4 h-4 shrink-0" />
-          <span>{timeSlotLabels[String(booking.preferredTimeSlot)] ?? String(booking.preferredTimeSlot)}</span>
+          <span>
+            {timeSlotLabels[String(booking.preferredTimeSlot)] ??
+              String(booking.preferredTimeSlot)}
+          </span>
         </div>
         <div className="flex items-center gap-2 text-muted-foreground col-span-full">
           <MapPin className="w-4 h-4 shrink-0" />
           <span>
             {booking.location}
-            {booking.district ? `, ${booking.district}` : ''}
-            {booking.state ? `, ${booking.state}` : ''}
+            {booking.district ? `, ${booking.district}` : ""}
+            {booking.state ? `, ${booking.state}` : ""}
           </span>
         </div>
       </div>
@@ -145,29 +180,40 @@ function BookingCard({ booking }: { booking: BookingRecord }) {
 
       <div className="mt-3 pt-3 border-t border-border">
         <p className="text-xs text-muted-foreground">
-          Submitted: {new Date(Number(booking.timestamp) / 1_000_000).toLocaleString('en-IN')}
+          Submitted:{" "}
+          {new Date(Number(booking.timestamp) / 1_000_000).toLocaleString(
+            "en-IN",
+          )}
         </p>
       </div>
     </div>
   );
 }
 
-function BookingsTab() {
-  const [activeFilter, setActiveFilter] = useState<string>('all');
-  const [searchQuery, setSearchQuery] = useState('');
-  const { data: bookings, isLoading, isError, error, refetch, isFetching } = useGetAllBookings();
+function BookingsTab({ isAdminReady }: { isAdminReady: boolean }) {
+  const [activeFilter, setActiveFilter] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const {
+    data: bookings,
+    isLoading,
+    isError,
+    error,
+    refetch,
+    isFetching,
+  } = useGetAllBookings({ enabled: isAdminReady });
 
   const filterTabs = [
-    { key: 'all', label: 'All / सभी' },
-    { key: BookingStatus.pending, label: 'Pending / लंबित' },
-    { key: BookingStatus.confirmed, label: 'Confirmed / पुष्टि' },
-    { key: BookingStatus.inProgress, label: 'In Progress' },
-    { key: BookingStatus.completed, label: 'Completed / पूर्ण' },
-    { key: BookingStatus.cancelled, label: 'Cancelled / रद्द' },
+    { key: "all", label: "All / सभी" },
+    { key: BookingStatus.pending, label: "Pending / लंबित" },
+    { key: BookingStatus.confirmed, label: "Confirmed / पुष्टि" },
+    { key: BookingStatus.inProgress, label: "In Progress" },
+    { key: BookingStatus.completed, label: "Completed / पूर्ण" },
+    { key: BookingStatus.cancelled, label: "Cancelled / रद्द" },
   ];
 
   const filteredBookings = (bookings ?? []).filter((b) => {
-    const matchesFilter = activeFilter === 'all' || getStatusKey(b.status) === activeFilter;
+    const matchesFilter =
+      activeFilter === "all" || getStatusKey(b.status) === activeFilter;
     const matchesSearch =
       !searchQuery ||
       b.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -178,13 +224,17 @@ function BookingsTab() {
 
   const countByStatus = (key: string) => {
     if (!bookings) return 0;
-    if (key === 'all') return bookings.length;
+    if (key === "all") return bookings.length;
     return bookings.filter((b) => getStatusKey(b.status) === key).length;
   };
 
-  if (isLoading) {
+  if (!isAdminReady || isLoading) {
     return (
       <div className="space-y-4">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+          <Loader2 className="w-4 h-4 animate-spin" />
+          <span>एडमिन एक्सेस तैयार हो रहा है... / Preparing admin access...</span>
+        </div>
         {[1, 2, 3].map((i) => (
           <Skeleton key={i} className="h-48 w-full rounded-xl" />
         ))}
@@ -194,23 +244,21 @@ function BookingsTab() {
 
   if (isError) {
     const errMsg = error instanceof Error ? error.message : String(error);
-    const isUnauthorized =
-      errMsg.toLowerCase().includes('unauthorized') || errMsg.toLowerCase().includes('admin');
     return (
       <Alert variant="destructive" className="my-4">
         <AlertCircle className="h-4 w-4" />
-        <AlertTitle>
-          {isUnauthorized
-            ? 'Authorization Error / अनुमति त्रुटि'
-            : 'Error Loading Bookings / बुकिंग लोड करने में त्रुटि'}
-        </AlertTitle>
+        <AlertTitle>बुकिंग लोड करने में त्रुटि / Error Loading Bookings</AlertTitle>
         <AlertDescription className="mt-2 space-y-2">
-          <p>
-            {isUnauthorized
-              ? 'आपके पास बुकिंग देखने की अनुमति नहीं है। कृपया सुनिश्चित करें कि आप एडमिन अकाउंट से लॉगिन हैं। / You do not have permission to view bookings. Please ensure you are logged in with an admin account.'
-              : errMsg}
+          <p className="text-sm">{errMsg}</p>
+          <p className="text-xs text-muted-foreground">
+            कृपया पुनः प्रयास करें। / Please try again.
           </p>
-          <Button variant="outline" size="sm" onClick={() => refetch()} className="mt-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => refetch()}
+            className="mt-2"
+          >
             <RefreshCw className="w-4 h-4 mr-2" />
             Retry / पुनः प्रयास
           </Button>
@@ -230,8 +278,17 @@ function BookingsTab() {
           onChange={(e) => setSearchQuery(e.target.value)}
           className="flex-1 px-4 py-2 border border-border rounded-xl bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm"
         />
-        <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isFetching}>
-          {isFetching ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => refetch()}
+          disabled={isFetching}
+        >
+          {isFetching ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <RefreshCw className="w-4 h-4" />
+          )}
         </Button>
       </div>
 
@@ -241,12 +298,13 @@ function BookingsTab() {
           const count = countByStatus(tab.key);
           return (
             <button
+              type="button"
               key={tab.key}
               onClick={() => setActiveFilter(tab.key)}
               className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors border ${
                 activeFilter === tab.key
-                  ? 'bg-primary text-primary-foreground border-primary'
-                  : 'bg-background text-muted-foreground border-border hover:border-primary/50'
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "bg-background text-muted-foreground border-border hover:border-primary/50"
               }`}
             >
               {tab.label}
@@ -254,8 +312,8 @@ function BookingsTab() {
                 <span
                   className={`ml-1.5 px-1.5 py-0.5 rounded-full text-xs ${
                     activeFilter === tab.key
-                      ? 'bg-primary-foreground/20 text-primary-foreground'
-                      : 'bg-muted text-muted-foreground'
+                      ? "bg-primary-foreground/20 text-primary-foreground"
+                      : "bg-muted text-muted-foreground"
                   }`}
                 >
                   {count}
@@ -272,14 +330,15 @@ function BookingsTab() {
           <ClipboardList className="w-12 h-12 mx-auto mb-3 opacity-30" />
           <p className="font-medium">
             {(bookings ?? []).length === 0
-              ? 'कोई बुकिंग नहीं मिली। / No bookings found.'
-              : 'इस फ़िल्टर में कोई बुकिंग नहीं। / No bookings in this filter.'}
+              ? "कोई बुकिंग नहीं मिली। / No bookings found."
+              : "इस फ़िल्टर में कोई बुकिंग नहीं। / No bookings in this filter."}
           </p>
         </div>
       ) : (
         <div className="space-y-4">
           <p className="text-sm text-muted-foreground">
-            Showing {filteredBookings.length} of {(bookings ?? []).length} bookings
+            Showing {filteredBookings.length} of {(bookings ?? []).length}{" "}
+            bookings
           </p>
           {filteredBookings.map((booking) => (
             <BookingCard key={String(booking.id)} booking={booking} />
@@ -296,19 +355,26 @@ function ServicesTab() {
   const { mutate: deleteService, isPending: isDeleting } = useDeleteService();
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({
-    name: '',
-    nameHindi: '',
-    description: '',
-    descriptionHindi: '',
-    priceRange: '',
-    category: '',
+    name: "",
+    nameHindi: "",
+    description: "",
+    descriptionHindi: "",
+    priceRange: "",
+    category: "",
   });
 
   const handleCreate = (e: React.FormEvent) => {
     e.preventDefault();
     createService(form, {
       onSuccess: () => {
-        setForm({ name: '', nameHindi: '', description: '', descriptionHindi: '', priceRange: '', category: '' });
+        setForm({
+          name: "",
+          nameHindi: "",
+          description: "",
+          descriptionHindi: "",
+          priceRange: "",
+          category: "",
+        });
         setShowForm(false);
       },
     });
@@ -344,19 +410,24 @@ function ServicesTab() {
           <h4 className="font-medium text-foreground">New Service / नई सेवा</h4>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {[
-              { key: 'name', placeholder: 'Service Name (English)' },
-              { key: 'nameHindi', placeholder: 'सेवा का नाम (हिंदी)' },
-              { key: 'description', placeholder: 'Description (English)' },
-              { key: 'descriptionHindi', placeholder: 'विवरण (हिंदी)' },
-              { key: 'priceRange', placeholder: 'Price Range (e.g. ₹299-₹999)' },
-              { key: 'category', placeholder: 'Category' },
+              { key: "name", placeholder: "Service Name (English)" },
+              { key: "nameHindi", placeholder: "सेवा का नाम (हिंदी)" },
+              { key: "description", placeholder: "Description (English)" },
+              { key: "descriptionHindi", placeholder: "विवरण (हिंदी)" },
+              {
+                key: "priceRange",
+                placeholder: "Price Range (e.g. ₹299-₹999)",
+              },
+              { key: "category", placeholder: "Category" },
             ].map(({ key, placeholder }) => (
               <input
                 key={key}
                 type="text"
                 placeholder={placeholder}
                 value={(form as unknown as Record<string, string>)[key]}
-                onChange={(e) => setForm((prev) => ({ ...prev, [key]: e.target.value }))}
+                onChange={(e) =>
+                  setForm((prev) => ({ ...prev, [key]: e.target.value }))
+                }
                 className="px-3 py-2 border border-border rounded-lg bg-background text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
                 required
               />
@@ -364,10 +435,17 @@ function ServicesTab() {
           </div>
           <div className="flex gap-2">
             <Button type="submit" size="sm" disabled={isCreating}>
-              {isCreating ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : null}
+              {isCreating ? (
+                <Loader2 className="w-4 h-4 animate-spin mr-1" />
+              ) : null}
               Save / सहेजें
             </Button>
-            <Button type="button" variant="outline" size="sm" onClick={() => setShowForm(false)}>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setShowForm(false)}
+            >
               Cancel
             </Button>
           </div>
@@ -384,7 +462,9 @@ function ServicesTab() {
               <h4 className="font-medium text-foreground">
                 {service.name} / {service.nameHindi}
               </h4>
-              <p className="text-sm text-muted-foreground mt-0.5">{service.description}</p>
+              <p className="text-sm text-muted-foreground mt-0.5">
+                {service.description}
+              </p>
               <div className="flex gap-2 mt-2">
                 <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">
                   {service.priceRange}
@@ -423,11 +503,11 @@ function ServicesTab() {
 type SettingsKey = keyof Settings;
 
 const settingsFields: { key: SettingsKey; label: string }[] = [
-  { key: 'businessName', label: 'Business Name / व्यवसाय का नाम' },
-  { key: 'contactPhone', label: 'Contact Phone / संपर्क फोन' },
-  { key: 'whatsappNumber', label: 'WhatsApp Number / व्हाट्सएप नंबर' },
-  { key: 'businessAddress', label: 'Address / पता' },
-  { key: 'businessHours', label: 'Business Hours / कार्य समय' },
+  { key: "businessName", label: "Business Name / व्यवसाय का नाम" },
+  { key: "contactPhone", label: "Contact Phone / संपर्क फोन" },
+  { key: "whatsappNumber", label: "WhatsApp Number / व्हाट्सएप नंबर" },
+  { key: "businessAddress", label: "Address / पता" },
+  { key: "businessHours", label: "Business Hours / कार्य समय" },
 ];
 
 function SettingsTab() {
@@ -456,15 +536,25 @@ function SettingsTab() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4 max-w-lg">
-      <h3 className="font-semibold text-foreground">Business Settings / व्यवसाय सेटिंग्स</h3>
+      <h3 className="font-semibold text-foreground">
+        Business Settings / व्यवसाय सेटिंग्स
+      </h3>
       {settingsFields.map(({ key, label }) => (
         <div key={key}>
-          <label className="block text-sm font-medium text-foreground mb-1">{label}</label>
+          <label
+            htmlFor={`settings-field-${key}`}
+            className="block text-sm font-medium text-foreground mb-1"
+          >
+            {label}
+          </label>
           <input
+            id={`settings-field-${key}`}
             type="text"
             value={form[key]}
             onChange={(e) =>
-              setForm((prev) => (prev ? { ...prev, [key]: e.target.value } : prev))
+              setForm((prev) =>
+                prev ? { ...prev, [key]: e.target.value } : prev,
+              )
             }
             className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
           />
@@ -485,21 +575,41 @@ function SettingsTab() {
   );
 }
 
-export default function AdminDashboard() {
-  const [activeTab, setActiveTab] = useState<'bookings' | 'services' | 'settings'>('bookings');
+interface AdminDashboardProps {
+  isAdminReady?: boolean;
+}
+
+export default function AdminDashboard({
+  isAdminReady = true,
+}: AdminDashboardProps) {
+  const [activeTab, setActiveTab] = useState<
+    "bookings" | "services" | "settings"
+  >("bookings");
   const { clear, identity } = useInternetIdentity();
   const queryClient = useQueryClient();
 
   const handleLogout = async () => {
     await clear();
     queryClient.clear();
-    sessionStorage.removeItem('admin_authenticated');
+    sessionStorage.removeItem("admin_authenticated");
   };
 
   const tabs = [
-    { key: 'bookings', label: 'Bookings / बुकिंग', icon: <ClipboardList className="w-4 h-4" /> },
-    { key: 'services', label: 'Services / सेवाएं', icon: <Package className="w-4 h-4" /> },
-    { key: 'settings', label: 'Settings / सेटिंग्स', icon: <SettingsIcon className="w-4 h-4" /> },
+    {
+      key: "bookings",
+      label: "Bookings / बुकिंग",
+      icon: <ClipboardList className="w-4 h-4" />,
+    },
+    {
+      key: "services",
+      label: "Services / सेवाएं",
+      icon: <Package className="w-4 h-4" />,
+    },
+    {
+      key: "settings",
+      label: "Settings / सेटिंग्स",
+      icon: <SettingsIcon className="w-4 h-4" />,
+    },
   ];
 
   return (
@@ -512,7 +622,9 @@ export default function AdminDashboard() {
               <Wrench className="w-4 h-4 text-primary" />
             </div>
             <div>
-              <h1 className="font-bold text-foreground text-sm sm:text-base">Admin Dashboard</h1>
+              <h1 className="font-bold text-foreground text-sm sm:text-base">
+                Admin Dashboard
+              </h1>
               {identity && (
                 <p className="text-xs text-muted-foreground hidden sm:block">
                   {identity.getPrincipal().toString().slice(0, 20)}...
@@ -535,12 +647,15 @@ export default function AdminDashboard() {
         <div className="max-w-6xl mx-auto px-4 flex gap-1 pb-0">
           {tabs.map((tab) => (
             <button
+              type="button"
               key={tab.key}
-              onClick={() => setActiveTab(tab.key as 'bookings' | 'services' | 'settings')}
+              onClick={() =>
+                setActiveTab(tab.key as "bookings" | "services" | "settings")
+              }
               className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
                 activeTab === tab.key
-                  ? 'border-primary text-primary'
-                  : 'border-transparent text-muted-foreground hover:text-foreground'
+                  ? "border-primary text-primary"
+                  : "border-transparent text-muted-foreground hover:text-foreground"
               }`}
             >
               {tab.icon}
@@ -552,9 +667,11 @@ export default function AdminDashboard() {
 
       {/* Content */}
       <div className="max-w-6xl mx-auto px-4 py-6">
-        {activeTab === 'bookings' && <BookingsTab />}
-        {activeTab === 'services' && <ServicesTab />}
-        {activeTab === 'settings' && <SettingsTab />}
+        {activeTab === "bookings" && (
+          <BookingsTab isAdminReady={isAdminReady} />
+        )}
+        {activeTab === "services" && <ServicesTab />}
+        {activeTab === "settings" && <SettingsTab />}
       </div>
     </div>
   );
