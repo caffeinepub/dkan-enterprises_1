@@ -17,20 +17,35 @@ export default function Hero() {
       </div>
 
       <div className="relative z-10 max-w-5xl mx-auto px-4 py-24 text-center">
-        {/* Logo - DKAN only, no SevaMitra overlay */}
+        {/* Logo - DKAN Enterprises prominent display */}
         <div className="flex justify-center mb-6">
-          <img
-            src="/assets/generated/dkan-logo.dim_400x400.png"
-            alt="DKAN Enterprises"
-            className="h-24 w-24 rounded-full object-cover border-4 border-electric-green shadow-lg"
-            onError={(e) => {
-              e.currentTarget.style.display = "none";
-            }}
-          />
+          <div className="bg-white/10 backdrop-blur-md rounded-2xl px-6 py-4 border border-white/20 shadow-2xl">
+            <img
+              src="/assets/generated/dkan-logo-transparent.dim_400x150.png"
+              alt="DKAN Enterprises"
+              className="h-20 md:h-28 w-auto object-contain"
+              style={{
+                maxWidth: "320px",
+                filter: "drop-shadow(0 2px 8px rgba(0,0,0,0.5))",
+              }}
+              onError={(e) => {
+                const el = e.currentTarget;
+                el.style.display = "none";
+                const fallback = el.nextElementSibling as HTMLElement;
+                if (fallback) fallback.style.display = "block";
+              }}
+            />
+            <h1
+              className="text-4xl md:text-5xl font-bold text-white font-sans tracking-tight"
+              style={{ display: "none" }}
+            >
+              DKAN ENTERPRISES
+            </h1>
+          </div>
         </div>
 
-        {/* Brand */}
-        <h1 className="text-4xl md:text-6xl font-bold text-white mb-2 font-sans tracking-tight">
+        {/* Brand tagline */}
+        <h1 className="text-4xl md:text-6xl font-bold text-white mb-2 font-sans tracking-tight sr-only">
           DKAN ENTERPRISES
         </h1>
         <p className="text-electric-green text-lg md:text-xl font-hindi mb-6">

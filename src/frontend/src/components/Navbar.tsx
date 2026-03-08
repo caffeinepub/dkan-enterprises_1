@@ -18,14 +18,22 @@ export default function Navbar() {
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-navy/95 backdrop-blur-sm shadow-navy-lg">
       <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-        {/* Logo - DKAN only */}
-        <a href="/" className="flex items-center gap-3">
+        {/* Logo - DKAN Enterprises */}
+        <a href="/" className="flex items-center">
           <img
-            src="/assets/generated/dkan-logo.dim_400x400.png"
+            src="/assets/generated/dkan-logo-transparent.dim_400x150.png"
             alt="DKAN Enterprises"
-            className="h-10 w-10 rounded-full object-cover border-2 border-electric"
+            className="h-10 md:h-14 w-auto object-contain"
+            style={{ maxWidth: "180px" }}
+            onError={(e) => {
+              // Fallback to text if image fails
+              const el = e.currentTarget;
+              el.style.display = "none";
+              const fallback = el.nextElementSibling as HTMLElement;
+              if (fallback) fallback.style.display = "flex";
+            }}
           />
-          <div>
+          <div className="hidden flex-col" style={{ display: "none" }}>
             <p className="text-white font-bold text-sm font-poppins leading-tight">
               DKAN ENTERPRISES
             </p>
