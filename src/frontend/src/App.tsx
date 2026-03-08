@@ -47,7 +47,8 @@ function AdminPage() {
   const handleAuthenticated = React.useCallback(() => {
     setAuthenticated(true);
     // Give the backend a moment to settle before enabling bookings query
-    setTimeout(() => setIsAdminReady(true), 500);
+    // 1500ms delay ensures _initializeAccessControlWithSecret has completed
+    setTimeout(() => setIsAdminReady(true), 1500);
   }, []);
 
   if (!authenticated) {

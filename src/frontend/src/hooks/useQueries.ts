@@ -20,8 +20,20 @@ export function useGetAllBookings(options?: { enabled?: boolean }) {
       return result;
     },
     enabled: !!actor && !isFetching && options?.enabled !== false,
-    retry: 5,
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 8000),
+    retry: (failureCount, error) => {
+      const msg = error instanceof Error ? error.message : String(error);
+      // Don't retry on authorization errors — these need re-login
+      if (
+        msg.includes("Unauthorized") ||
+        msg.includes("Only admins") ||
+        msg.includes("not registered") ||
+        msg.includes("Permission denied")
+      ) {
+        return false;
+      }
+      return failureCount < 3;
+    },
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 5000),
     staleTime: 0,
   });
 }
@@ -37,11 +49,19 @@ export function useCreateBooking() {
       if (isFetching)
         throw new Error("Actor is still initializing. Please wait.");
       const result = await actor.createBooking(input);
-      // Result_2 is { __kind__: "ok"; ok: bigint } | { __kind__: "err"; err: string }
-      if (result.__kind__ === "err") {
-        throw new Error(result.err);
+      // Handle both { __kind__: "ok", ok: bigint } and { ok: bigint } shapes
+      if (result && typeof result === "object") {
+        const r = result as Record<string, unknown>;
+        // Variant with __kind__
+        if (r.__kind__ === "err") throw new Error(r.err as string);
+        if (r.__kind__ === "ok") return r.ok as bigint;
+        // Variant without __kind__ (direct ok/err keys)
+        if ("err" in r) throw new Error(r.err as string);
+        if ("ok" in r) return r.ok as bigint;
       }
-      return result.ok;
+      // If result is just a bigint (some SDK versions return directly)
+      if (typeof result === "bigint") return result;
+      throw new Error("Unexpected response from server. Please try again.");
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["allBookings"] });

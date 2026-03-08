@@ -244,24 +244,48 @@ function BookingsTab({ isAdminReady }: { isAdminReady: boolean }) {
 
   if (isError) {
     const errMsg = error instanceof Error ? error.message : String(error);
+    const isAuthError =
+      errMsg.includes("Unauthorized") ||
+      errMsg.includes("Only admins") ||
+      errMsg.includes("not registered") ||
+      errMsg.includes("Permission denied");
     return (
       <Alert variant="destructive" className="my-4">
         <AlertCircle className="h-4 w-4" />
-        <AlertTitle>बुकिंग लोड करने में त्रुटि / Error Loading Bookings</AlertTitle>
+        <AlertTitle>
+          {isAuthError
+            ? "लॉगिन फिर से करें / Re-login Required"
+            : "बुकिंग लोड करने में त्रुटि / Error Loading Bookings"}
+        </AlertTitle>
         <AlertDescription className="mt-2 space-y-2">
-          <p className="text-sm">{errMsg}</p>
-          <p className="text-xs text-muted-foreground">
-            कृपया पुनः प्रयास करें। / Please try again.
-          </p>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => refetch()}
-            className="mt-2"
-          >
-            <RefreshCw className="w-4 h-4 mr-2" />
-            Retry / पुनः प्रयास
-          </Button>
+          {isAuthError ? (
+            <p className="text-sm">
+              Admin session expire हो गया। कृपया page refresh करें और फिर से login
+              करें।
+              <br />
+              <span className="text-xs opacity-80">
+                Admin session expired. Please refresh the page and login again.
+              </span>
+            </p>
+          ) : (
+            <p className="text-sm">{errMsg}</p>
+          )}
+          <div className="flex gap-2 mt-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                if (isAuthError) {
+                  window.location.reload();
+                } else {
+                  refetch();
+                }
+              }}
+            >
+              <RefreshCw className="w-4 h-4 mr-2" />
+              {isAuthError ? "Refresh Page" : "Retry / पुनः प्रयास"}
+            </Button>
+          </div>
         </AlertDescription>
       </Alert>
     );
