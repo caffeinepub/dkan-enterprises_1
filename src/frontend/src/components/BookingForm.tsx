@@ -1,7 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { AlertCircle, CheckCircle, Loader2, RefreshCw } from "lucide-react";
-import type React from "react";
-import { useState } from "react";
+import React, { useState } from "react";
 import { ServiceType, TimeSlot } from "../backend";
 import type { BookingInput } from "../backend";
 import { useActor } from "../hooks/useActor";
@@ -241,6 +240,13 @@ export default function BookingForm() {
   const [form, setForm] = useState<FormData>(initialForm);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [bookingId, setBookingId] = useState<bigint | null>(null);
+  const [isWaitingForActor, setIsWaitingForActor] = useState(false);
+
+  // Actor ref so we can access latest value in async callback
+  const actorRef = React.useRef(actor);
+  actorRef.current = actor;
+  const actorFetchingRef = React.useRef(actorFetching);
+  actorFetchingRef.current = actorFetching;
 
   const isActorReady = !!actor && !actorFetching;
 
@@ -249,14 +255,28 @@ export default function BookingForm() {
     if (submitError) setSubmitError(null);
   };
 
+  const doSubmit = React.useCallback(
+    (input: BookingInput) => {
+      createBooking(input, {
+        onSuccess: (id) => {
+          setBookingId(id);
+          setSubmitError(null);
+          setIsWaitingForActor(false);
+          setForm(initialForm);
+          queryClient.invalidateQueries({ queryKey: ["allBookings"] });
+        },
+        onError: (error) => {
+          setIsWaitingForActor(false);
+          setSubmitError(getErrorMessage(error, lang));
+        },
+      });
+    },
+    [createBooking, lang, queryClient],
+  );
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitError(null);
-
-    if (!isActorReady) {
-      setSubmitError(t("booking.systemInitializing", lang));
-      return;
-    }
 
     if (!form.serviceType || !form.timeSlot) {
       setSubmitError(t("booking.fillAllFields", lang));
@@ -275,17 +295,33 @@ export default function BookingForm() {
       problemDescription: form.problemDescription.trim(),
     };
 
-    createBooking(input, {
-      onSuccess: (id) => {
-        setBookingId(id);
-        setSubmitError(null);
-        setForm(initialForm);
-        queryClient.invalidateQueries({ queryKey: ["allBookings"] });
-      },
-      onError: (error) => {
-        setSubmitError(getErrorMessage(error, lang));
-      },
-    });
+    // If actor is ready, submit immediately
+    if (actorRef.current && !actorFetchingRef.current) {
+      doSubmit(input);
+      return;
+    }
+
+    // Otherwise wait up to 15 seconds for actor to be ready
+    setIsWaitingForActor(true);
+    const maxWait = 15000;
+    const interval = 300;
+    let waited = 0;
+
+    const waitAndSubmit = setInterval(() => {
+      waited += interval;
+      if (actorRef.current && !actorFetchingRef.current) {
+        clearInterval(waitAndSubmit);
+        doSubmit(input);
+      } else if (waited >= maxWait) {
+        clearInterval(waitAndSubmit);
+        setIsWaitingForActor(false);
+        setSubmitError(
+          lang === "hi"
+            ? "सर्वर से कनेक्ट नहीं हो पाया। कृपया पेज रिफ्रेश करके दोबारा कोशिश करें।"
+            : "Could not connect to server. Please refresh the page and try again.",
+        );
+      }
+    }, interval);
   };
 
   const handleRetry = () => {
@@ -347,9 +383,9 @@ export default function BookingForm() {
         </div>
 
         {!isActorReady && (
-          <div className="mb-4 flex items-center gap-2 text-sm text-muted-foreground bg-muted/50 border border-border rounded-xl px-4 py-3">
-            <Loader2 className="w-4 h-4 animate-spin shrink-0" />
-            {t("booking.systemInitializingShort", lang)}
+          <div className="mb-4 flex items-center gap-2 text-xs text-muted-foreground bg-muted/30 border border-border/50 rounded-lg px-3 py-2">
+            <Loader2 className="w-3 h-3 animate-spin shrink-0" />
+            {lang === "hi" ? "कनेक्ट हो रहा है..." : "Connecting..."}
           </div>
         )}
 
@@ -566,13 +602,17 @@ export default function BookingForm() {
           {/* Submit */}
           <button
             type="submit"
-            disabled={isPending || !isActorReady}
+            disabled={isPending || isWaitingForActor}
             className="w-full py-3.5 bg-primary text-primary-foreground rounded-xl font-semibold text-base hover:bg-primary/90 transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
           >
-            {isPending ? (
+            {isPending || isWaitingForActor ? (
               <>
                 <Loader2 className="w-5 h-5 animate-spin" />
-                {t("booking.submitting", lang)}
+                {isWaitingForActor
+                  ? lang === "hi"
+                    ? "कनेक्ट हो रहा है..."
+                    : "Connecting..."
+                  : t("booking.submitting", lang)}
               </>
             ) : (
               t("booking.submit", lang)
