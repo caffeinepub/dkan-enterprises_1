@@ -21,9 +21,9 @@ export default function Footer() {
           <div className="md:col-span-2">
             <div className="flex items-center gap-3 mb-4">
               <img
-                src="/assets/generated/dkan-logo.dim_400x400.png"
+                src="/assets/uploads/logo-image-1-1.jpg"
                 alt="DKAN Enterprises"
-                className="h-12 w-12 rounded-full object-cover border-2 border-electric"
+                className="h-14 w-14 rounded-xl object-contain bg-white p-1 border-2 border-electric"
               />
               <div>
                 <p className="text-white font-bold font-poppins">

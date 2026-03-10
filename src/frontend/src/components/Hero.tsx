@@ -19,35 +19,16 @@ export default function Hero() {
       <div className="relative z-10 max-w-5xl mx-auto px-4 py-24 text-center">
         {/* Logo - DKAN Enterprises prominent display */}
         <div className="flex justify-center mb-6">
-          <div className="bg-white/10 backdrop-blur-md rounded-2xl px-6 py-4 border border-white/20 shadow-2xl">
+          <div className="bg-white/95 backdrop-blur-md rounded-full p-3 border border-white/20 shadow-2xl">
             <img
-              src="/assets/generated/dkan-logo-transparent.dim_400x150.png"
+              src="/assets/uploads/logo-image-1-1.jpg"
               alt="DKAN Enterprises"
-              className="h-20 md:h-28 w-auto object-contain"
-              style={{
-                maxWidth: "320px",
-                filter: "drop-shadow(0 2px 8px rgba(0,0,0,0.5))",
-              }}
-              onError={(e) => {
-                const el = e.currentTarget;
-                el.style.display = "none";
-                const fallback = el.nextElementSibling as HTMLElement;
-                if (fallback) fallback.style.display = "block";
-              }}
+              className="h-28 md:h-36 w-28 md:w-36 object-cover rounded-full mx-auto"
             />
-            <h1
-              className="text-4xl md:text-5xl font-bold text-white font-sans tracking-tight"
-              style={{ display: "none" }}
-            >
-              DKAN ENTERPRISES
-            </h1>
           </div>
         </div>
 
         {/* Brand tagline */}
-        <h1 className="text-4xl md:text-6xl font-bold text-white mb-2 font-sans tracking-tight sr-only">
-          DKAN ENTERPRISES
-        </h1>
         <p className="text-electric-green text-lg md:text-xl font-hindi mb-6">
           {lang === "hi"
             ? "होम अप्लायंस रिपेयर सर्विस"

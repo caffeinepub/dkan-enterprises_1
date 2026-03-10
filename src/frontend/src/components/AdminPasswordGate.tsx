@@ -3,7 +3,7 @@ import { Eye, EyeOff, Loader2, Lock, LogIn, Shield } from "lucide-react";
 import type React from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useInternetIdentity } from "../hooks/useInternetIdentity";
-import { useInitializeAdmin } from "../hooks/useQueries";
+import { useInitializeAdmin, usePromoteToAdmin } from "../hooks/useQueries";
 
 interface AdminPasswordGateProps {
   onAuthenticated: () => void;
@@ -20,25 +20,26 @@ export default function AdminPasswordGate({
   const [error, setError] = useState("");
   const [passwordVerified, setPasswordVerified] = useState(false);
   const [isSettingUp, setIsSettingUp] = useState(false);
+  const [setupStatus, setSetupStatus] = useState("");
   const hasInitialized = useRef(false);
 
   const { login, clear, loginStatus, identity, isInitializing } =
     useInternetIdentity();
   const queryClient = useQueryClient();
   const initializeAdmin = useInitializeAdmin();
+  const promoteToAdmin = usePromoteToAdmin();
 
   const isLoggingIn = loginStatus === "logging-in";
   const isAuthenticated = !!identity;
 
-  // Store latest references in refs so the effect deps are stable
-  const initializeMutateRef = useRef(initializeAdmin.mutate);
   const onAuthenticatedRef = useRef(onAuthenticated);
-  useEffect(() => {
-    initializeMutateRef.current = initializeAdmin.mutate;
-  });
   useEffect(() => {
     onAuthenticatedRef.current = onAuthenticated;
   });
+
+  const stableOnAuthenticated = useCallback(() => {
+    onAuthenticatedRef.current();
+  }, []);
 
   // Check session storage for password verification
   useEffect(() => {
@@ -48,42 +49,37 @@ export default function AdminPasswordGate({
     }
   }, []);
 
-  // Stable callbacks that always call the latest ref values
-  const stableInitializeMutate = useCallback(
-    (
-      password: string,
-      options: Parameters<typeof initializeAdmin.mutate>[1],
-    ) => {
-      initializeMutateRef.current(password, options);
-    },
-    [],
-  );
-  const stableOnAuthenticated = useCallback(() => {
-    onAuthenticatedRef.current();
-  }, []);
-
-  // Once both password verified AND identity present, initialize admin then call onAuthenticated
+  const initializeMutateRef = useRef(initializeAdmin.mutate);
+  const promoteMutateRef = useRef(promoteToAdmin.mutate);
   useEffect(() => {
-    if (passwordVerified && isAuthenticated && !hasInitialized.current) {
-      hasInitialized.current = true;
-      setIsSettingUp(true);
-      stableInitializeMutate(ADMIN_PASSWORD, {
-        onSettled: () => {
-          // Whether success or already-registered error, wait briefly for
-          // backend to process registration before loading the dashboard.
-          setTimeout(() => {
-            setIsSettingUp(false);
-            stableOnAuthenticated();
-          }, 800);
-        },
-      });
-    }
-  }, [
-    passwordVerified,
-    isAuthenticated,
-    stableInitializeMutate,
-    stableOnAuthenticated,
-  ]);
+    initializeMutateRef.current = initializeAdmin.mutate;
+  });
+  useEffect(() => {
+    promoteMutateRef.current = promoteToAdmin.mutate;
+  });
+
+  // Once both password verified AND identity present, initialize admin
+  useEffect(() => {
+    if (!passwordVerified || !isAuthenticated || hasInitialized.current) return;
+    hasInitialized.current = true;
+    setIsSettingUp(true);
+    setSetupStatus("एडमिन एक्सेस सेट हो रहा है...");
+
+    initializeMutateRef.current(ADMIN_PASSWORD, {
+      onSettled: () => {
+        setSetupStatus("एडमिन अधिकार जांच रहे हैं...");
+        promoteMutateRef.current(ADMIN_PASSWORD, {
+          onSettled: () => {
+            setSetupStatus("तैयार हो रहा है...");
+            setTimeout(() => {
+              setIsSettingUp(false);
+              stableOnAuthenticated();
+            }, 1000);
+          },
+        });
+      },
+    });
+  }, [passwordVerified, isAuthenticated, stableOnAuthenticated]);
 
   const handlePasswordSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -114,6 +110,7 @@ export default function AdminPasswordGate({
   const handleBackToPassword = () => {
     sessionStorage.removeItem(SESSION_KEY);
     setPasswordVerified(false);
+    hasInitialized.current = false;
   };
 
   // Global initializing spinner
@@ -137,9 +134,7 @@ export default function AdminPasswordGate({
           <p className="text-foreground font-medium text-sm">
             Setting up admin access...
           </p>
-          <p className="text-muted-foreground text-xs">
-            एडमिन एक्सेस सेट हो रहा है...
-          </p>
+          <p className="text-muted-foreground text-xs">{setupStatus}</p>
         </div>
       </div>
     );
@@ -174,6 +169,7 @@ export default function AdminPasswordGate({
                 <div className="relative">
                   <input
                     id="admin-password"
+                    data-ocid="admin.input"
                     type={showPassword ? "text" : "password"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
@@ -202,6 +198,7 @@ export default function AdminPasswordGate({
 
               <button
                 type="submit"
+                data-ocid="admin.submit_button"
                 className="w-full py-3 bg-primary text-primary-foreground rounded-xl font-semibold hover:bg-primary/90 transition-colors"
               >
                 जारी रखें / Continue
@@ -242,6 +239,7 @@ export default function AdminPasswordGate({
 
             <button
               type="button"
+              data-ocid="admin.login_button"
               onClick={handleLogin}
               disabled={isLoggingIn}
               className="w-full py-3 bg-primary text-primary-foreground rounded-xl font-semibold hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 disabled:opacity-60"

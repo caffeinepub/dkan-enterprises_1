@@ -145,6 +145,18 @@ export function useInitializeAdmin() {
   });
 }
 
+export function usePromoteToAdmin() {
+  const { actor } = useActor();
+
+  return useMutation({
+    mutationFn: async (password: string) => {
+      if (!actor) throw new Error("Actor not available");
+      const result = await (actor as any)._promoteToAdmin(password);
+      return result as boolean;
+    },
+  });
+}
+
 export function useGetSettings() {
   const { actor, isFetching } = useActor();
 

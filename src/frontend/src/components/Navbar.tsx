@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useLanguage } from "../hooks/useLanguage";
 
 export default function Navbar() {
-  const { lang, toggleLang } = useLanguage();
+  const { lang, setLang } = useLanguage();
   const [menuOpen, setMenuOpen] = useState(false);
   const router = useRouter();
 
@@ -19,21 +19,13 @@ export default function Navbar() {
     <nav className="fixed top-0 left-0 right-0 z-50 bg-navy/95 backdrop-blur-sm shadow-navy-lg">
       <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
         {/* Logo - DKAN Enterprises */}
-        <a href="/" className="flex items-center">
+        <a href="/" className="flex items-center gap-2">
           <img
-            src="/assets/generated/dkan-logo-transparent.dim_400x150.png"
+            src="/assets/uploads/logo-image-1-1.jpg"
             alt="DKAN Enterprises"
-            className="h-10 md:h-14 w-auto object-contain"
-            style={{ maxWidth: "180px" }}
-            onError={(e) => {
-              // Fallback to text if image fails
-              const el = e.currentTarget;
-              el.style.display = "none";
-              const fallback = el.nextElementSibling as HTMLElement;
-              if (fallback) fallback.style.display = "flex";
-            }}
+            className="h-10 md:h-14 w-10 md:w-14 object-cover rounded-full border-2 border-electric/30"
           />
-          <div className="hidden flex-col" style={{ display: "none" }}>
+          <div className="flex flex-col">
             <p className="text-white font-bold text-sm font-poppins leading-tight">
               DKAN ENTERPRISES
             </p>
@@ -60,13 +52,53 @@ export default function Navbar() {
 
         {/* Right side */}
         <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={toggleLang}
-            className="text-xs bg-electric/20 text-electric border border-electric/30 px-3 py-1.5 rounded-full hover:bg-electric/30 transition-colors font-poppins"
+          {/* Language Tab Switcher */}
+          <div
+            className="flex items-center rounded-full overflow-hidden"
+            style={{ border: "1.5px solid oklch(0.82 0.22 155 / 0.6)" }}
+            data-ocid="lang.tab"
           >
-            {lang === "hi" ? "EN" : "हिं"}
-          </button>
+            <button
+              type="button"
+              onClick={() => setLang("hi")}
+              style={
+                lang === "hi"
+                  ? {
+                      backgroundColor: "oklch(0.82 0.22 155)",
+                      color: "oklch(0.08 0.05 245)",
+                      fontWeight: "700",
+                    }
+                  : {
+                      backgroundColor: "transparent",
+                      color: "oklch(0.82 0.22 155)",
+                    }
+              }
+              className="text-xs px-3 py-1.5 font-devanagari transition-colors"
+              data-ocid="lang.hi.tab"
+            >
+              हिं
+            </button>
+            <button
+              type="button"
+              onClick={() => setLang("en")}
+              style={
+                lang === "en"
+                  ? {
+                      backgroundColor: "oklch(0.82 0.22 155)",
+                      color: "oklch(0.08 0.05 245)",
+                      fontWeight: "700",
+                    }
+                  : {
+                      backgroundColor: "transparent",
+                      color: "oklch(0.82 0.22 155)",
+                    }
+              }
+              className="text-xs px-3 py-1.5 font-poppins transition-colors"
+              data-ocid="lang.en.tab"
+            >
+              EN
+            </button>
+          </div>
 
           {!isAdmin && (
             <a

@@ -1,6 +1,5 @@
 import Map "mo:core/Map";
 import Principal "mo:core/Principal";
-import Runtime "mo:core/Runtime";
 
 module {
   public type UserRole = {
@@ -21,13 +20,13 @@ module {
     };
   };
 
-  // First principal that calls this function becomes admin, all other principals become users.
-  public func initialize(state : AccessControlState, caller : Principal, adminToken : Text, userProvidedToken : Text) {
+  // First principal that calls this with correct password becomes admin.
+  public func initialize(state : AccessControlState, caller : Principal, adminPassword : Text, userProvidedPassword : Text) {
     if (caller.isAnonymous()) { return };
     switch (state.userRoles.get(caller)) {
-      case (?_) {};
+      case (?_) {}; // already registered, skip
       case (null) {
-        if (not state.adminAssigned and userProvidedToken == adminToken) {
+        if (not state.adminAssigned and userProvidedPassword == adminPassword) {
           state.userRoles.add(caller, #admin);
           state.adminAssigned := true;
         } else {
@@ -41,23 +40,23 @@ module {
     if (caller.isAnonymous()) { return #guest };
     switch (state.userRoles.get(caller)) {
       case (?role) { role };
-      case (null) {
-        Runtime.trap("User is not registered");
-      };
+      case (null) { #guest }; // unregistered = guest, no trap
     };
   };
 
   public func assignRole(state : AccessControlState, caller : Principal, user : Principal, role : UserRole) {
-    if (not (isAdmin(state, caller))) {
-      Runtime.trap("Unauthorized: Only admins can assign user roles");
+    if (not isAdmin(state, caller)) {
+      return; // silently ignore unauthorized
     };
     state.userRoles.add(user, role);
   };
 
   public func hasPermission(state : AccessControlState, caller : Principal, requiredRole : UserRole) : Bool {
     let userRole = getUserRole(state, caller);
-    if (userRole == #admin or requiredRole == #guest) { true } else {
-      userRole == requiredRole;
+    switch (requiredRole) {
+      case (#guest) { true };
+      case (#user) { userRole == #admin or userRole == #user };
+      case (#admin) { userRole == #admin };
     };
   };
 

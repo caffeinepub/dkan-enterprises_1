@@ -1,18 +1,25 @@
 import AccessControl "./access-control";
-import Prim "mo:prim";
-import Runtime "mo:core/Runtime";
 
 mixin (accessControlState : AccessControl.AccessControlState) {
-  // Initialize auth (first caller becomes admin, others become users)
-  public shared ({ caller }) func _initializeAccessControlWithSecret(userSecret : Text) : async () {
-    switch (Prim.envVar<system>("CAFFEINE_ADMIN_TOKEN")) {
-      case (null) {
-        Runtime.trap("CAFFEINE_ADMIN_TOKEN environment variable is not set");
-      };
-      case (?adminToken) {
-        AccessControl.initialize(accessControlState, caller, adminToken, userSecret);
-      };
+  // Initialize: first caller with correct password becomes admin
+  public shared ({ caller }) func _initializeAccessControlWithSecret(userPassword : Text) : async () {
+    // Use hardcoded admin password - first caller with correct password becomes admin
+    let adminPassword = "admin123";
+    AccessControl.initialize(accessControlState, caller, adminPassword, userPassword);
+  };
+
+  // Re-register as admin if already registered as user (for existing deployments)
+  public shared ({ caller }) func _promoteToAdmin(userPassword : Text) : async Bool {
+    if (userPassword != "admin123") { return false };
+    if (caller.isAnonymous()) { return false };
+    // If admin not yet assigned, assign this caller as admin
+    if (not accessControlState.adminAssigned) {
+      accessControlState.userRoles.add(caller, #admin);
+      accessControlState.adminAssigned := true;
+      return true;
     };
+    // Already has an admin - check if caller is already admin
+    return AccessControl.isAdmin(accessControlState, caller);
   };
 
   public query ({ caller }) func getCallerUserRole() : async AccessControl.UserRole {
@@ -20,7 +27,6 @@ mixin (accessControlState : AccessControl.AccessControlState) {
   };
 
   public shared ({ caller }) func assignCallerUserRole(user : Principal, role : AccessControl.UserRole) : async () {
-    // Admin-only check happens inside
     AccessControl.assignRole(accessControlState, caller, user, role);
   };
 

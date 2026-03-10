@@ -87,25 +87,42 @@ const UP_DISTRICTS = [
 ];
 
 const STATES = [
-  "Uttar Pradesh",
-  "Gujarat",
-  "Maharashtra",
-  "Madhya Pradesh",
-  "Rajasthan",
+  "Andaman and Nicobar Islands",
+  "Andhra Pradesh",
+  "Arunachal Pradesh",
+  "Assam",
   "Bihar",
-  "West Bengal",
+  "Chandigarh",
+  "Chhattisgarh",
+  "Dadra and Nagar Haveli and Daman and Diu",
+  "Delhi",
+  "Goa",
+  "Gujarat",
+  "Haryana",
+  "Himachal Pradesh",
+  "Jammu and Kashmir",
+  "Jharkhand",
   "Karnataka",
+  "Kerala",
+  "Ladakh",
+  "Lakshadweep",
+  "Madhya Pradesh",
+  "Maharashtra",
+  "Manipur",
+  "Meghalaya",
+  "Mizoram",
+  "Nagaland",
+  "Odisha",
+  "Puducherry",
+  "Punjab",
+  "Rajasthan",
+  "Sikkim",
   "Tamil Nadu",
   "Telangana",
-  "Andhra Pradesh",
-  "Kerala",
-  "Odisha",
-  "Jharkhand",
-  "Chhattisgarh",
-  "Haryana",
-  "Punjab",
-  "Delhi",
-  "Other",
+  "Tripura",
+  "Uttar Pradesh",
+  "Uttarakhand",
+  "West Bengal",
 ];
 
 const serviceOptions = [
@@ -186,8 +203,6 @@ const initialForm: FormData = {
 
 function getErrorMessage(error: unknown, lang: "hi" | "en"): string {
   const msg = error instanceof Error ? error.message : String(error);
-
-  // Actor/initialization errors
   if (
     msg.includes("Actor not initialized") ||
     msg.includes("still initializing") ||
@@ -195,8 +210,6 @@ function getErrorMessage(error: unknown, lang: "hi" | "en"): string {
   ) {
     return t("booking.bookingActorError", lang);
   }
-
-  // Network/fetch errors
   if (
     msg.includes("network") ||
     msg.includes("fetch") ||
@@ -205,8 +218,6 @@ function getErrorMessage(error: unknown, lang: "hi" | "en"): string {
   ) {
     return t("booking.bookingNetworkError", lang);
   }
-
-  // Validation errors from backend (empty field messages)
   if (
     msg.includes("cannot be empty") ||
     msg.includes("Customer name") ||
@@ -219,8 +230,6 @@ function getErrorMessage(error: unknown, lang: "hi" | "en"): string {
       ? `जानकारी अधूरी है: ${msg}`
       : `Validation error: ${msg}`;
   }
-
-  // Generic booking error with the actual message
   return lang === "hi"
     ? `${t("booking.bookingError", lang)} (${msg})`
     : `${t("booking.bookingError", lang)} (${msg})`;
@@ -229,6 +238,10 @@ function getErrorMessage(error: unknown, lang: "hi" | "en"): string {
 export default function BookingForm() {
   const { lang } = useLanguage();
   const { actor, isFetching: actorFetching } = useActor();
+  const actorError = false;
+  const refetchActor = () => {
+    window.location.reload();
+  };
   const {
     mutate: createBooking,
     isPending,
@@ -242,7 +255,6 @@ export default function BookingForm() {
   const [bookingId, setBookingId] = useState<bigint | null>(null);
   const [isWaitingForActor, setIsWaitingForActor] = useState(false);
 
-  // Actor ref so we can access latest value in async callback
   const actorRef = React.useRef(actor);
   actorRef.current = actor;
   const actorFetchingRef = React.useRef(actorFetching);
@@ -295,23 +307,35 @@ export default function BookingForm() {
       problemDescription: form.problemDescription.trim(),
     };
 
-    // If actor is ready, submit immediately
     if (actorRef.current && !actorFetchingRef.current) {
       doSubmit(input);
       return;
     }
 
-    // Otherwise wait up to 15 seconds for actor to be ready
     setIsWaitingForActor(true);
-    const maxWait = 15000;
-    const interval = 300;
+    // Trigger a fresh refetch if actor is not loading
+    if (!actorFetchingRef.current) {
+      refetchActor();
+    }
+
+    const maxWait = 30000;
+    const interval = 500;
     let waited = 0;
+    let extraRefetchDone = false;
 
     const waitAndSubmit = setInterval(() => {
       waited += interval;
       if (actorRef.current && !actorFetchingRef.current) {
         clearInterval(waitAndSubmit);
         doSubmit(input);
+      } else if (
+        !actorFetchingRef.current &&
+        !actorRef.current &&
+        !extraRefetchDone &&
+        waited > 5000
+      ) {
+        extraRefetchDone = true;
+        refetchActor();
       } else if (waited >= maxWait) {
         clearInterval(waitAndSubmit);
         setIsWaitingForActor(false);
@@ -327,9 +351,25 @@ export default function BookingForm() {
   const handleRetry = () => {
     setSubmitError(null);
     reset();
+    if (!actor) refetchActor();
   };
 
   if (isSuccess) {
+    // Build WhatsApp message with booking details
+    const serviceLabels: Record<string, string> = {
+      acRepair: "AC Repair",
+      washingMachineRepair: "Washing Machine",
+      refrigeratorRepair: "Refrigerator",
+      microwaveRepair: "Microwave",
+      geyserRepair: "Geyser",
+      lcdLedTvRepair: "LCD/LED TV",
+      waterPurifier: "Water Purifier",
+    };
+    const whatsappText = encodeURIComponent(
+      `🔔 नई बुकिंग - DKAN Enterprises\n━━━━━━━━━━━━━━━━\n📋 बुकिंग ID: #${bookingId !== null ? String(bookingId) : "N/A"}\n👤 नाम: ${form.customerName}\n📞 फोन: ${form.phoneNumber}\n🔧 सेवा: ${serviceLabels[form.serviceType] || form.serviceType}\n📍 स्थान: ${form.location}, ${form.district}, ${form.state}\n📅 तारीख: ${form.preferredDate}\n⏰ समय: ${form.timeSlot}\n📝 समस्या: ${form.problemDescription}\n━━━━━━━━━━━━━━━━\nकृपया जल्द सम्पर्क करें।`,
+    );
+    const whatsappUrl = `https://wa.me/918009675645?text=${whatsappText}`;
+
     return (
       <section id="booking" className="py-16 bg-background">
         <div className="max-w-2xl mx-auto px-4">
@@ -351,6 +391,33 @@ export default function BookingForm() {
             <p className="text-muted-foreground mb-6">
               {t("booking.contactSoon", lang)}
             </p>
+
+            {/* WhatsApp Notification Button */}
+            <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-xl">
+              <p className="text-sm text-green-800 font-medium mb-3">
+                {lang === "hi"
+                  ? "📱 व्हाट्सएप पर बुकिंग भेजें (एडमिन को सूचित करें)"
+                  : "📱 Send booking on WhatsApp (Notify Admin)"}
+              </p>
+              <a
+                href={whatsappUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                data-ocid="booking.whatsapp_button"
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-green-500 text-white rounded-xl font-semibold hover:bg-green-600 transition-colors text-sm"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  className="w-5 h-5 fill-current"
+                  aria-label="WhatsApp"
+                  role="img"
+                >
+                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+                </svg>
+                {lang === "hi" ? "व्हाट्सएप पर भेजें" : "Send on WhatsApp"}
+              </a>
+            </div>
+
             <button
               type="button"
               onClick={() => {
@@ -382,7 +449,24 @@ export default function BookingForm() {
           <p className="text-muted-foreground">{t("booking.subtitle", lang)}</p>
         </div>
 
-        {!isActorReady && (
+        {actorError && !actor && (
+          <div className="mb-4 flex items-center gap-2 text-xs text-destructive bg-destructive/10 border border-destructive/20 rounded-lg px-3 py-2">
+            <AlertCircle className="w-3 h-3 shrink-0" />
+            <span className="flex-1">
+              {lang === "hi" ? "कनेक्शन में समस्या है" : "Connection issue"}
+            </span>
+            <button
+              type="button"
+              onClick={() => refetchActor()}
+              className="text-xs underline hover:no-underline flex items-center gap-1"
+            >
+              <RefreshCw className="w-3 h-3" />
+              {lang === "hi" ? "फिर कोशिश करें" : "Retry"}
+            </button>
+          </div>
+        )}
+
+        {!isActorReady && !actorError && (
           <div className="mb-4 flex items-center gap-2 text-xs text-muted-foreground bg-muted/30 border border-border/50 rounded-lg px-3 py-2">
             <Loader2 className="w-3 h-3 animate-spin shrink-0" />
             {lang === "hi" ? "कनेक्ट हो रहा है..." : "Connecting..."}
@@ -393,7 +477,6 @@ export default function BookingForm() {
           onSubmit={handleSubmit}
           className="bg-card border border-border rounded-2xl p-6 sm:p-8 shadow-navy-lg space-y-5"
         >
-          {/* Name */}
           <div>
             <label htmlFor="booking-name" className={labelClass}>
               {t("booking.name", lang)}
@@ -409,7 +492,6 @@ export default function BookingForm() {
             />
           </div>
 
-          {/* Phone */}
           <div>
             <label htmlFor="booking-phone" className={labelClass}>
               {t("booking.phone", lang)}
@@ -426,7 +508,6 @@ export default function BookingForm() {
             />
           </div>
 
-          {/* State */}
           <div>
             <label htmlFor="booking-state" className={labelClass}>
               {t("booking.state", lang)}
@@ -446,7 +527,6 @@ export default function BookingForm() {
             </select>
           </div>
 
-          {/* District */}
           <div>
             <label htmlFor="booking-district" className={labelClass}>
               {t("booking.district", lang)}
@@ -479,7 +559,6 @@ export default function BookingForm() {
             )}
           </div>
 
-          {/* Location */}
           <div>
             <label htmlFor="booking-location" className={labelClass}>
               {t("booking.location", lang)}
@@ -497,7 +576,6 @@ export default function BookingForm() {
             />
           </div>
 
-          {/* Service Type */}
           <div>
             <label htmlFor="booking-service-type" className={labelClass}>
               {t("booking.serviceType", lang)}
@@ -518,7 +596,6 @@ export default function BookingForm() {
             </select>
           </div>
 
-          {/* Preferred Date */}
           <div>
             <label htmlFor="booking-preferred-date" className={labelClass}>
               {t("booking.preferredDate", lang)}
@@ -534,7 +611,6 @@ export default function BookingForm() {
             />
           </div>
 
-          {/* Time Slot */}
           <div>
             <label htmlFor="booking-time-slot" className={labelClass}>
               {t("booking.timeSlot", lang)}
@@ -555,7 +631,6 @@ export default function BookingForm() {
             </select>
           </div>
 
-          {/* Problem Description */}
           <div>
             <label htmlFor="booking-problem-description" className={labelClass}>
               {t("booking.problemDescription", lang)}
@@ -576,7 +651,6 @@ export default function BookingForm() {
             />
           </div>
 
-          {/* Error Message */}
           {submitError && (
             <div className="flex items-start gap-3 bg-destructive/10 border border-destructive/30 rounded-xl px-4 py-3">
               <AlertCircle className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
@@ -599,7 +673,6 @@ export default function BookingForm() {
             </div>
           )}
 
-          {/* Submit */}
           <button
             type="submit"
             disabled={isPending || isWaitingForActor}
