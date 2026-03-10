@@ -250,7 +250,11 @@ function BookingsTab({ isAdminReady }: { isAdminReady: boolean }) {
       errMsg.includes("not registered") ||
       errMsg.includes("Permission denied");
     return (
-      <Alert variant="destructive" className="my-4">
+      <Alert
+        variant="destructive"
+        className="my-4"
+        data-ocid="bookings.error_state"
+      >
         <AlertCircle className="h-4 w-4" />
         <AlertTitle>
           {isAuthError
@@ -260,8 +264,8 @@ function BookingsTab({ isAdminReady }: { isAdminReady: boolean }) {
         <AlertDescription className="mt-2 space-y-2">
           {isAuthError ? (
             <p className="text-sm">
-              Admin session expire हो गया। कृपया page refresh करें और फिर से login
-              करें।
+              Admin access setup हो रहा है। कृपया 10 seconds wait करें और &lsquo;फिर
+              कोशिश करें&rsquo; दबाएं।
               <br />
               <span className="text-xs opacity-80">
                 Admin session expired. Please refresh the page and login again.
@@ -270,10 +274,22 @@ function BookingsTab({ isAdminReady }: { isAdminReady: boolean }) {
           ) : (
             <p className="text-sm">{errMsg}</p>
           )}
-          <div className="flex gap-2 mt-2">
+          <div className="flex gap-2 mt-2 flex-wrap">
+            {isAuthError && (
+              <Button
+                variant="outline"
+                size="sm"
+                data-ocid="bookings.primary_button"
+                onClick={() => refetch()}
+              >
+                <RefreshCw className="w-4 h-4 mr-2" />
+                फिर कोशिश करें / Try Again
+              </Button>
+            )}
             <Button
               variant="outline"
               size="sm"
+              data-ocid="bookings.secondary_button"
               onClick={() => {
                 if (isAuthError) {
                   window.location.reload();
@@ -301,12 +317,14 @@ function BookingsTab({ isAdminReady }: { isAdminReady: boolean }) {
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="flex-1 px-4 py-2 border border-border rounded-xl bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm"
+          data-ocid="bookings.search_input"
         />
         <Button
           variant="outline"
           size="sm"
           onClick={() => refetch()}
           disabled={isFetching}
+          data-ocid="bookings.secondary_button"
         >
           {isFetching ? (
             <Loader2 className="w-4 h-4 animate-spin" />
@@ -325,6 +343,7 @@ function BookingsTab({ isAdminReady }: { isAdminReady: boolean }) {
               type="button"
               key={tab.key}
               onClick={() => setActiveFilter(tab.key)}
+              data-ocid="bookings.tab"
               className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors border ${
                 activeFilter === tab.key
                   ? "bg-primary text-primary-foreground border-primary"
@@ -350,7 +369,10 @@ function BookingsTab({ isAdminReady }: { isAdminReady: boolean }) {
 
       {/* Bookings list */}
       {filteredBookings.length === 0 ? (
-        <div className="text-center py-16 text-muted-foreground">
+        <div
+          className="text-center py-16 text-muted-foreground"
+          data-ocid="bookings.empty_state"
+        >
           <ClipboardList className="w-12 h-12 mx-auto mb-3 opacity-30" />
           <p className="font-medium">
             {(bookings ?? []).length === 0
@@ -364,8 +386,13 @@ function BookingsTab({ isAdminReady }: { isAdminReady: boolean }) {
             Showing {filteredBookings.length} of {(bookings ?? []).length}{" "}
             bookings
           </p>
-          {filteredBookings.map((booking) => (
-            <BookingCard key={String(booking.id)} booking={booking} />
+          {filteredBookings.map((booking, idx) => (
+            <div
+              key={String(booking.id)}
+              data-ocid={`bookings.item.${idx + 1}`}
+            >
+              <BookingCard booking={booking} />
+            </div>
           ))}
         </div>
       )}
@@ -420,7 +447,11 @@ function ServicesTab() {
         <h3 className="font-semibold text-foreground">
           Services / सेवाएं ({(services ?? []).length})
         </h3>
-        <Button size="sm" onClick={() => setShowForm(!showForm)}>
+        <Button
+          size="sm"
+          onClick={() => setShowForm(!showForm)}
+          data-ocid="services.primary_button"
+        >
           <Plus className="w-4 h-4 mr-1" />
           Add Service
         </Button>
@@ -458,7 +489,12 @@ function ServicesTab() {
             ))}
           </div>
           <div className="flex gap-2">
-            <Button type="submit" size="sm" disabled={isCreating}>
+            <Button
+              type="submit"
+              size="sm"
+              disabled={isCreating}
+              data-ocid="services.submit_button"
+            >
               {isCreating ? (
                 <Loader2 className="w-4 h-4 animate-spin mr-1" />
               ) : null}
@@ -469,6 +505,7 @@ function ServicesTab() {
               variant="outline"
               size="sm"
               onClick={() => setShowForm(false)}
+              data-ocid="services.cancel_button"
             >
               Cancel
             </Button>
@@ -477,9 +514,10 @@ function ServicesTab() {
       )}
 
       <div className="space-y-3">
-        {(services ?? []).map((service) => (
+        {(services ?? []).map((service, idx) => (
           <div
             key={String(service.id)}
+            data-ocid={`services.item.${idx + 1}`}
             className="bg-card border border-border rounded-xl p-4 flex items-start justify-between gap-3"
           >
             <div>
@@ -503,6 +541,7 @@ function ServicesTab() {
               size="icon"
               onClick={() => deleteService(service.id)}
               disabled={isDeleting}
+              data-ocid={`services.delete_button.${idx + 1}`}
               className="text-destructive hover:text-destructive hover:bg-destructive/10 shrink-0"
             >
               {isDeleting ? (
@@ -514,7 +553,10 @@ function ServicesTab() {
           </div>
         ))}
         {(services ?? []).length === 0 && (
-          <div className="text-center py-10 text-muted-foreground">
+          <div
+            className="text-center py-10 text-muted-foreground"
+            data-ocid="services.empty_state"
+          >
             <Package className="w-10 h-10 mx-auto mb-2 opacity-30" />
             <p>No services added yet. / अभी कोई सेवा नहीं जोड़ी गई।</p>
           </div>
@@ -585,12 +627,19 @@ function SettingsTab() {
         </div>
       ))}
       <div className="flex items-center gap-3">
-        <Button type="submit" disabled={isPending}>
+        <Button
+          type="submit"
+          disabled={isPending}
+          data-ocid="settings.submit_button"
+        >
           {isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
           Save Settings / सेटिंग्स सहेजें
         </Button>
         {isSuccess && (
-          <span className="text-sm text-green-600 flex items-center gap-1">
+          <span
+            className="text-sm text-green-600 flex items-center gap-1"
+            data-ocid="settings.success_state"
+          >
             <CheckCircle className="w-4 h-4" /> Saved!
           </span>
         )}
@@ -660,6 +709,7 @@ export default function AdminDashboard({
             variant="ghost"
             size="sm"
             onClick={handleLogout}
+            data-ocid="admin.secondary_button"
             className="text-muted-foreground hover:text-foreground"
           >
             <LogOut className="w-4 h-4 mr-1" />
@@ -676,6 +726,7 @@ export default function AdminDashboard({
               onClick={() =>
                 setActiveTab(tab.key as "bookings" | "services" | "settings")
               }
+              data-ocid="admin.tab"
               className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
                 activeTab === tab.key
                   ? "border-primary text-primary"

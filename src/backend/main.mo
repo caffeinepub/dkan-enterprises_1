@@ -1,15 +1,16 @@
 import Time "mo:core/Time";
 import Map "mo:core/Map";
-import Array "mo:core/Array";
 import Text "mo:core/Text";
 import Principal "mo:core/Principal";
 import List "mo:core/List";
-import Iter "mo:core/Iter";
 import Runtime "mo:core/Runtime";
 import MixinAuthorization "authorization/MixinAuthorization";
 import AccessControl "authorization/access-control";
 
 actor {
+  // Migration: retain stable variable from previous version to avoid compatibility error
+  stable var DKAN_ADMIN_PASSWORD : Text = "admin123";
+
   let accessControlState = AccessControl.initState();
   include MixinAuthorization(accessControlState);
 
@@ -73,7 +74,6 @@ actor {
   let userProfiles = Map.empty<Principal, UserProfile>();
   var nextBookingId = 1;
 
-  // Maintain a mapping from caller to their bookings
   let bookingOwners = Map.empty<Principal, List.List<Nat>>();
   let bookings = Map.empty<Nat, BookingRecord>();
 
@@ -153,7 +153,6 @@ actor {
 
   // =============== PUBLIC SHARED FUNCTIONS =================
   public shared ({ caller }) func createBooking(input : BookingInput) : async Result<Nat, Text> {
-    // Input Validation
     if (input.customerName.isEmpty()) { return #err("Customer name cannot be empty") };
     if (input.phoneNumber.isEmpty()) { return #err("Phone number cannot be empty") };
     if (input.state.isEmpty()) { return #err("State cannot be empty") };
@@ -180,7 +179,6 @@ actor {
 
     bookings.add(bookingId, newBooking);
 
-    // Record booking ownership
     let callerBookings = switch (bookingOwners.get(caller)) {
       case (null) { List.empty<Nat>() };
       case (?existing) { existing };
@@ -341,7 +339,6 @@ actor {
     #ok(true);
   };
 
-  // ========== Districts by state (should be hardcoded in frontend, but provided for compatibility) ==========
   public query func getDistrictsByState(state : Text) : async [Text] {
     switch (districtMappings.get(state)) {
       case (null) { [] };

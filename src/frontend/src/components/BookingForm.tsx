@@ -159,6 +159,22 @@ const serviceOptions = [
   },
 ];
 
+const serviceLabels: Record<string, string> = {
+  acRepair: "AC Repair / एसी मरम्मत",
+  washingMachineRepair: "Washing Machine / वाशिंग मशीन",
+  refrigeratorRepair: "Refrigerator / रेफ्रिजरेटर",
+  microwaveRepair: "Microwave / माइक्रोवेव",
+  geyserRepair: "Geyser / गीज़र",
+  lcdLedTvRepair: "LCD/LED TV",
+  waterPurifier: "Water Purifier / वाटर प्यूरीफायर",
+};
+
+const timeSlotLabels: Record<string, string> = {
+  morning_9_12: "सुबह 9–12 बजे",
+  afternoon_12_4: "दोपहर 12–4 बजे",
+  evening_4_7: "शाम 4–7 बजे",
+};
+
 const timeSlotOptions = [
   {
     value: TimeSlot.morning_9_12,
@@ -251,6 +267,8 @@ export default function BookingForm() {
   const queryClient = useQueryClient();
 
   const [form, setForm] = useState<FormData>(initialForm);
+  // Save a snapshot of form data at submission time for the success screen
+  const [submittedData, setSubmittedData] = useState<FormData | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [bookingId, setBookingId] = useState<bigint | null>(null);
   const [isWaitingForActor, setIsWaitingForActor] = useState(false);
@@ -268,10 +286,11 @@ export default function BookingForm() {
   };
 
   const doSubmit = React.useCallback(
-    (input: BookingInput) => {
+    (input: BookingInput, snapshot: FormData) => {
       createBooking(input, {
         onSuccess: (id) => {
           setBookingId(id);
+          setSubmittedData(snapshot); // Save BEFORE resetting form
           setSubmitError(null);
           setIsWaitingForActor(false);
           setForm(initialForm);
@@ -307,16 +326,16 @@ export default function BookingForm() {
       problemDescription: form.problemDescription.trim(),
     };
 
+    // Snapshot current form values before any async operation
+    const snapshot = { ...form };
+
     if (actorRef.current && !actorFetchingRef.current) {
-      doSubmit(input);
+      doSubmit(input, snapshot);
       return;
     }
 
     setIsWaitingForActor(true);
-    // Trigger a fresh refetch if actor is not loading
-    if (!actorFetchingRef.current) {
-      refetchActor();
-    }
+    if (!actorFetchingRef.current) refetchActor();
 
     const maxWait = 30000;
     const interval = 500;
@@ -327,7 +346,7 @@ export default function BookingForm() {
       waited += interval;
       if (actorRef.current && !actorFetchingRef.current) {
         clearInterval(waitAndSubmit);
-        doSubmit(input);
+        doSubmit(input, snapshot);
       } else if (
         !actorFetchingRef.current &&
         !actorRef.current &&
@@ -354,21 +373,12 @@ export default function BookingForm() {
     if (!actor) refetchActor();
   };
 
-  if (isSuccess) {
-    // Build WhatsApp message with booking details
-    const serviceLabels: Record<string, string> = {
-      acRepair: "AC Repair",
-      washingMachineRepair: "Washing Machine",
-      refrigeratorRepair: "Refrigerator",
-      microwaveRepair: "Microwave",
-      geyserRepair: "Geyser",
-      lcdLedTvRepair: "LCD/LED TV",
-      waterPurifier: "Water Purifier",
-    };
-    const whatsappText = encodeURIComponent(
-      `🔔 नई बुकिंग - DKAN Enterprises\n━━━━━━━━━━━━━━━━\n📋 बुकिंग ID: #${bookingId !== null ? String(bookingId) : "N/A"}\n👤 नाम: ${form.customerName}\n📞 फोन: ${form.phoneNumber}\n🔧 सेवा: ${serviceLabels[form.serviceType] || form.serviceType}\n📍 स्थान: ${form.location}, ${form.district}, ${form.state}\n📅 तारीख: ${form.preferredDate}\n⏰ समय: ${form.timeSlot}\n📝 समस्या: ${form.problemDescription}\n━━━━━━━━━━━━━━━━\nकृपया जल्द सम्पर्क करें।`,
-    );
-    const whatsappUrl = `https://wa.me/918009675645?text=${whatsappText}`;
+  if (isSuccess && submittedData) {
+    // Use submittedData (snapshot) — NOT form (which is already reset to initialForm)
+    const d = submittedData;
+    const whatsappMessage = `🔔 नई बुकिंग - DKAN Enterprises\n━━━━━━━━━━━━━━━━\n📋 बुकिंग ID: #${bookingId !== null ? String(bookingId) : "N/A"}\n👤 नाम: ${d.customerName}\n📞 मोबाइल: ${d.phoneNumber}\n🔧 सेवा: ${serviceLabels[String(d.serviceType)] || String(d.serviceType)}\n📍 पता: ${d.location}, ${d.district}, ${d.state}\n📅 तारीख: ${d.preferredDate}\n⏰ समय: ${timeSlotLabels[String(d.timeSlot)] || String(d.timeSlot)}\n📝 समस्या: ${d.problemDescription || "(उल्लेख नहीं)"}\n━━━━━━━━━━━━━━━━\nकृपया जल्द सम्पर्क करें।`;
+
+    const whatsappUrl = `https://wa.me/918009675645?text=${encodeURIComponent(whatsappMessage)}`;
 
     return (
       <section id="booking" className="py-16 bg-background">
@@ -388,7 +398,36 @@ export default function BookingForm() {
                 </span>
               </p>
             )}
-            <p className="text-muted-foreground mb-6">
+
+            {/* Booking summary */}
+            <div className="my-4 text-left bg-muted/30 border border-border rounded-xl p-4 text-sm space-y-1">
+              <p>
+                <span className="font-semibold">नाम:</span> {d.customerName}
+              </p>
+              <p>
+                <span className="font-semibold">मोबाइल:</span> {d.phoneNumber}
+              </p>
+              <p>
+                <span className="font-semibold">सेवा:</span>{" "}
+                {serviceLabels[String(d.serviceType)] || String(d.serviceType)}
+              </p>
+              <p>
+                <span className="font-semibold">पता:</span> {d.location},{" "}
+                {d.district}, {d.state}
+              </p>
+              <p>
+                <span className="font-semibold">तारीख:</span> {d.preferredDate}{" "}
+                | {timeSlotLabels[String(d.timeSlot)] || String(d.timeSlot)}
+              </p>
+              {d.problemDescription && (
+                <p>
+                  <span className="font-semibold">समस्या:</span>{" "}
+                  {d.problemDescription}
+                </p>
+              )}
+            </div>
+
+            <p className="text-muted-foreground mb-5 text-sm">
               {t("booking.contactSoon", lang)}
             </p>
 
@@ -397,7 +436,7 @@ export default function BookingForm() {
               <p className="text-sm text-green-800 font-medium mb-3">
                 {lang === "hi"
                   ? "📱 व्हाट्सएप पर बुकिंग भेजें (एडमिन को सूचित करें)"
-                  : "📱 Send booking on WhatsApp (Notify Admin)"}
+                  : "📱 Send booking details on WhatsApp (Notify Admin)"}
               </p>
               <a
                 href={whatsappUrl}
@@ -423,6 +462,7 @@ export default function BookingForm() {
               onClick={() => {
                 reset();
                 setBookingId(null);
+                setSubmittedData(null);
                 setSubmitError(null);
               }}
               className="px-6 py-2.5 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 transition-colors"

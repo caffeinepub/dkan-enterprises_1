@@ -3,7 +3,7 @@ import { Eye, EyeOff, Loader2, Lock, LogIn, Shield } from "lucide-react";
 import type React from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useInternetIdentity } from "../hooks/useInternetIdentity";
-import { useInitializeAdmin, usePromoteToAdmin } from "../hooks/useQueries";
+import { usePromoteToAdmin } from "../hooks/useQueries";
 
 interface AdminPasswordGateProps {
   onAuthenticated: () => void;
@@ -20,13 +20,11 @@ export default function AdminPasswordGate({
   const [error, setError] = useState("");
   const [passwordVerified, setPasswordVerified] = useState(false);
   const [isSettingUp, setIsSettingUp] = useState(false);
-  const [setupStatus, setSetupStatus] = useState("");
-  const hasInitialized = useRef(false);
+  const hasPromoted = useRef(false);
 
   const { login, clear, loginStatus, identity, isInitializing } =
     useInternetIdentity();
   const queryClient = useQueryClient();
-  const initializeAdmin = useInitializeAdmin();
   const promoteToAdmin = usePromoteToAdmin();
 
   const isLoggingIn = loginStatus === "logging-in";
@@ -49,37 +47,36 @@ export default function AdminPasswordGate({
     }
   }, []);
 
-  const initializeMutateRef = useRef(initializeAdmin.mutate);
-  const promoteMutateRef = useRef(promoteToAdmin.mutate);
+  // Reset hasPromoted when isAuthenticated changes
   useEffect(() => {
-    initializeMutateRef.current = initializeAdmin.mutate;
-  });
-  useEffect(() => {
-    promoteMutateRef.current = promoteToAdmin.mutate;
-  });
+    if (isAuthenticated) {
+      hasPromoted.current = false;
+    }
+  }, [isAuthenticated]);
 
-  // Once both password verified AND identity present, initialize admin
+  // Once both password verified AND identity present, promote to admin
   useEffect(() => {
-    if (!passwordVerified || !isAuthenticated || hasInitialized.current) return;
-    hasInitialized.current = true;
+    if (!passwordVerified || !isAuthenticated || hasPromoted.current) return;
+    hasPromoted.current = true;
     setIsSettingUp(true);
-    setSetupStatus("एडमिन एक्सेस सेट हो रहा है...");
 
-    initializeMutateRef.current(ADMIN_PASSWORD, {
+    // Directly promote this principal to admin
+    promoteToAdmin.mutate(ADMIN_PASSWORD, {
       onSettled: () => {
-        setSetupStatus("एडमिन अधिकार जांच रहे हैं...");
-        promoteMutateRef.current(ADMIN_PASSWORD, {
-          onSettled: () => {
-            setSetupStatus("तैयार हो रहा है...");
-            setTimeout(() => {
-              setIsSettingUp(false);
-              stableOnAuthenticated();
-            }, 1000);
-          },
-        });
+        // Give backend 800ms to persist, then proceed
+        setTimeout(() => {
+          setIsSettingUp(false);
+          stableOnAuthenticated();
+        }, 800);
       },
     });
-  }, [passwordVerified, isAuthenticated, stableOnAuthenticated]);
+    // biome-ignore lint/correctness/useExhaustiveDependencies: promoteToAdmin.mutate is stable
+  }, [
+    passwordVerified,
+    isAuthenticated,
+    stableOnAuthenticated,
+    promoteToAdmin.mutate,
+  ]);
 
   const handlePasswordSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -110,7 +107,7 @@ export default function AdminPasswordGate({
   const handleBackToPassword = () => {
     sessionStorage.removeItem(SESSION_KEY);
     setPasswordVerified(false);
-    hasInitialized.current = false;
+    hasPromoted.current = false;
   };
 
   // Global initializing spinner
@@ -132,9 +129,11 @@ export default function AdminPasswordGate({
         <div className="flex flex-col items-center gap-3">
           <Loader2 className="w-8 h-8 animate-spin text-primary" />
           <p className="text-foreground font-medium text-sm">
-            Setting up admin access...
+            Admin access सेट हो रहा है...
           </p>
-          <p className="text-muted-foreground text-xs">{setupStatus}</p>
+          <p className="text-muted-foreground text-xs">
+            कृपया प्रतीक्षा करें / Please wait...
+          </p>
         </div>
       </div>
     );
@@ -231,9 +230,9 @@ export default function AdminPasswordGate({
                 features.
               </p>
               <p className="mt-3 px-3 py-2 bg-primary/10 text-primary text-xs text-center rounded-lg font-medium">
-                पहली बार लॉगिन पर आप स्वतः एडमिन बन जाएंगे।
+                Login करने पर आप automatically admin बन जाएंगे।
                 <br />
-                On first login, you will automatically become admin.
+                You will automatically get admin access on login.
               </p>
             </div>
 
@@ -270,6 +269,6 @@ export default function AdminPasswordGate({
     );
   }
 
-  // Both verified and initialized — render nothing (parent will show dashboard)
+  // Both verified and promoted — render nothing (parent will show dashboard)
   return null;
 }

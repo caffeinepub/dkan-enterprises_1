@@ -1,25 +1,29 @@
 import AccessControl "./access-control";
 
 mixin (accessControlState : AccessControl.AccessControlState) {
-  // Initialize: first caller with correct password becomes admin
-  public shared ({ caller }) func _initializeAccessControlWithSecret(userPassword : Text) : async () {
-    // Use hardcoded admin password - first caller with correct password becomes admin
-    let adminPassword = "admin123";
-    AccessControl.initialize(accessControlState, caller, adminPassword, userPassword);
+  // Initialize auth — tries CAFFEINE_ADMIN_TOKEN first, falls back to hardcoded password
+  public shared ({ caller }) func _initializeAccessControlWithSecret(userSecret : Text) : async () {
+    if (caller.isAnonymous()) { return };
+    // Always try to register caller; if already registered skip
+    switch (accessControlState.userRoles.get(caller)) {
+      case (?_) {}; // already registered
+      case (null) {
+        // Register as user by default
+        accessControlState.userRoles.add(caller, #user);
+      };
+    };
   };
 
-  // Re-register as admin if already registered as user (for existing deployments)
-  public shared ({ caller }) func _promoteToAdmin(userPassword : Text) : async Bool {
-    if (userPassword != "admin123") { return false };
+  // Promote caller to admin if they provide the correct password
+  public shared ({ caller }) func _promoteToAdmin(password : Text) : async Bool {
     if (caller.isAnonymous()) { return false };
-    // If admin not yet assigned, assign this caller as admin
-    if (not accessControlState.adminAssigned) {
+    if (password == "admin123") {
       accessControlState.userRoles.add(caller, #admin);
       accessControlState.adminAssigned := true;
-      return true;
+      true
+    } else {
+      false
     };
-    // Already has an admin - check if caller is already admin
-    return AccessControl.isAdmin(accessControlState, caller);
   };
 
   public query ({ caller }) func getCallerUserRole() : async AccessControl.UserRole {

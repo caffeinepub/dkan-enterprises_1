@@ -20,13 +20,12 @@ module {
     };
   };
 
-  // First principal that calls this with correct password becomes admin.
-  public func initialize(state : AccessControlState, caller : Principal, adminPassword : Text, userProvidedPassword : Text) {
+  public func initialize(state : AccessControlState, caller : Principal, adminToken : Text, userProvidedToken : Text) {
     if (caller.isAnonymous()) { return };
     switch (state.userRoles.get(caller)) {
-      case (?_) {}; // already registered, skip
+      case (?_) {};
       case (null) {
-        if (not state.adminAssigned and userProvidedPassword == adminPassword) {
+        if (not state.adminAssigned and userProvidedToken == adminToken) {
           state.userRoles.add(caller, #admin);
           state.adminAssigned := true;
         } else {
@@ -40,27 +39,33 @@ module {
     if (caller.isAnonymous()) { return #guest };
     switch (state.userRoles.get(caller)) {
       case (?role) { role };
-      case (null) { #guest }; // unregistered = guest, no trap
+      case (null) { #guest };
     };
   };
 
   public func assignRole(state : AccessControlState, caller : Principal, user : Principal, role : UserRole) {
-    if (not isAdmin(state, caller)) {
-      return; // silently ignore unauthorized
+    if (not (isAdmin(state, caller))) {
+      return; // silently ignore if not admin
     };
     state.userRoles.add(user, role);
   };
 
   public func hasPermission(state : AccessControlState, caller : Principal, requiredRole : UserRole) : Bool {
-    let userRole = getUserRole(state, caller);
-    switch (requiredRole) {
-      case (#guest) { true };
-      case (#user) { userRole == #admin or userRole == #user };
-      case (#admin) { userRole == #admin };
+    if (caller.isAnonymous()) { return requiredRole == #guest };
+    switch (state.userRoles.get(caller)) {
+      case (?role) {
+        if (role == #admin) { true }
+        else if (requiredRole == #guest) { true }
+        else { role == requiredRole };
+      };
+      case (null) { false };
     };
   };
 
   public func isAdmin(state : AccessControlState, caller : Principal) : Bool {
-    getUserRole(state, caller) == #admin;
+    switch (state.userRoles.get(caller)) {
+      case (?#admin) { true };
+      case (_) { false };
+    };
   };
 };

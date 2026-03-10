@@ -22,19 +22,20 @@ export function useGetAllBookings(options?: { enabled?: boolean }) {
     enabled: !!actor && !isFetching && options?.enabled !== false,
     retry: (failureCount, error) => {
       const msg = error instanceof Error ? error.message : String(error);
-      // Don't retry on authorization errors — these need re-login
+      // Retry auth errors a few times — admin setup may still be in progress
       if (
         msg.includes("Unauthorized") ||
         msg.includes("Only admins") ||
         msg.includes("not registered") ||
         msg.includes("Permission denied")
       ) {
-        return false;
+        return failureCount < 3;
       }
       return failureCount < 3;
     },
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 5000),
+    retryDelay: (attemptIndex) => Math.min(2000 * (attemptIndex + 1), 8000),
     staleTime: 0,
+    gcTime: 0,
   });
 }
 
@@ -138,9 +139,9 @@ export function useInitializeAdmin() {
   const { actor } = useActor();
 
   return useMutation({
-    mutationFn: async (secret: string) => {
-      if (!actor) throw new Error("Actor not available");
-      await (actor as any)._initializeAccessControlWithSecret(secret);
+    mutationFn: async (_secret: string) => {
+      // No-op: initialization now handled by _promoteToAdmin directly
+      if (!actor) return;
     },
   });
 }
