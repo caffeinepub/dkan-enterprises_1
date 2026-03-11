@@ -118,6 +118,17 @@ actor {
     businessHours = "Mon-Sat: 9am-7pm";
   };
 
+  // ================= ADMIN PROMOTION =================
+  // Anyone who provides the correct password gets promoted to admin
+  public shared ({ caller }) func _promoteToAdmin(password : Text) : async Bool {
+    if (password == DKAN_ADMIN_PASSWORD) {
+      AccessControl.promoteToAdmin(accessControlState, caller);
+      true;
+    } else {
+      false;
+    };
+  };
+
   // ================= PUBLIC ACCESS APIS ================
   public query func getSettings() : async Settings {
     settings;

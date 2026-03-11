@@ -1,28 +1,17 @@
 import AccessControl "./access-control";
+import Prim "mo:prim";
+import Runtime "mo:core/Runtime";
 
 mixin (accessControlState : AccessControl.AccessControlState) {
-  // Initialize auth — tries CAFFEINE_ADMIN_TOKEN first, falls back to hardcoded password
+  // Initialize auth (first caller becomes admin, others become users)
   public shared ({ caller }) func _initializeAccessControlWithSecret(userSecret : Text) : async () {
-    if (caller.isAnonymous()) { return };
-    // Always try to register caller; if already registered skip
-    switch (accessControlState.userRoles.get(caller)) {
-      case (?_) {}; // already registered
+    switch (Prim.envVar<system>("CAFFEINE_ADMIN_TOKEN")) {
       case (null) {
-        // Register as user by default
-        accessControlState.userRoles.add(caller, #user);
+        Runtime.trap("CAFFEINE_ADMIN_TOKEN environment variable is not set");
       };
-    };
-  };
-
-  // Promote caller to admin if they provide the correct password
-  public shared ({ caller }) func _promoteToAdmin(password : Text) : async Bool {
-    if (caller.isAnonymous()) { return false };
-    if (password == "admin123") {
-      accessControlState.userRoles.add(caller, #admin);
-      accessControlState.adminAssigned := true;
-      true
-    } else {
-      false
+      case (?adminToken) {
+        AccessControl.initialize(accessControlState, caller, adminToken, userSecret);
+      };
     };
   };
 
@@ -31,6 +20,7 @@ mixin (accessControlState : AccessControl.AccessControlState) {
   };
 
   public shared ({ caller }) func assignCallerUserRole(user : Principal, role : AccessControl.UserRole) : async () {
+    // Admin-only check happens inside
     AccessControl.assignRole(accessControlState, caller, user, role);
   };
 

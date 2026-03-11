@@ -20,6 +20,7 @@ module {
     };
   };
 
+  // First principal that calls this function becomes admin, all other principals become users.
   public func initialize(state : AccessControlState, caller : Principal, adminToken : Text, userProvidedToken : Text) {
     if (caller.isAnonymous()) { return };
     switch (state.userRoles.get(caller)) {
@@ -35,6 +36,13 @@ module {
     };
   };
 
+  // Promote caller to admin directly (no env token required)
+  public func promoteToAdmin(state : AccessControlState, caller : Principal) {
+    if (caller.isAnonymous()) { return };
+    state.userRoles.add(caller, #admin);
+    state.adminAssigned := true;
+  };
+
   public func getUserRole(state : AccessControlState, caller : Principal) : UserRole {
     if (caller.isAnonymous()) { return #guest };
     switch (state.userRoles.get(caller)) {
@@ -45,27 +53,19 @@ module {
 
   public func assignRole(state : AccessControlState, caller : Principal, user : Principal, role : UserRole) {
     if (not (isAdmin(state, caller))) {
-      return; // silently ignore if not admin
+      return; // silently fail rather than trap
     };
     state.userRoles.add(user, role);
   };
 
   public func hasPermission(state : AccessControlState, caller : Principal, requiredRole : UserRole) : Bool {
-    if (caller.isAnonymous()) { return requiredRole == #guest };
-    switch (state.userRoles.get(caller)) {
-      case (?role) {
-        if (role == #admin) { true }
-        else if (requiredRole == #guest) { true }
-        else { role == requiredRole };
-      };
-      case (null) { false };
+    let userRole = getUserRole(state, caller);
+    if (userRole == #admin or requiredRole == #guest) { true } else {
+      userRole == requiredRole;
     };
   };
 
   public func isAdmin(state : AccessControlState, caller : Principal) : Bool {
-    switch (state.userRoles.get(caller)) {
-      case (?#admin) { true };
-      case (_) { false };
-    };
+    getUserRole(state, caller) == #admin;
   };
 };
