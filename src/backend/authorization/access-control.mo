@@ -1,5 +1,6 @@
 import Map "mo:core/Map";
 import Principal "mo:core/Principal";
+import Runtime "mo:core/Runtime";
 
 module {
   public type UserRole = {
@@ -20,7 +21,6 @@ module {
     };
   };
 
-  // First principal that calls this function becomes admin, all other principals become users.
   public func initialize(state : AccessControlState, caller : Principal, adminToken : Text, userProvidedToken : Text) {
     if (caller.isAnonymous()) { return };
     switch (state.userRoles.get(caller)) {
@@ -36,10 +36,10 @@ module {
     };
   };
 
-  // Promote caller to admin directly (no env token required)
-  public func promoteToAdmin(state : AccessControlState, caller : Principal) {
-    if (caller.isAnonymous()) { return };
-    state.userRoles.add(caller, #admin);
+  // Directly promote any principal to admin without requiring existing admin check
+  public func promoteToAdmin(state : AccessControlState, user : Principal) {
+    if (user.isAnonymous()) { return };
+    state.userRoles.add(user, #admin);
     state.adminAssigned := true;
   };
 
@@ -47,13 +47,13 @@ module {
     if (caller.isAnonymous()) { return #guest };
     switch (state.userRoles.get(caller)) {
       case (?role) { role };
-      case (null) { #guest };
+      case (null) { #guest }; // Return guest instead of trapping
     };
   };
 
   public func assignRole(state : AccessControlState, caller : Principal, user : Principal, role : UserRole) {
     if (not (isAdmin(state, caller))) {
-      return; // silently fail rather than trap
+      Runtime.trap("Unauthorized: Only admins can assign user roles");
     };
     state.userRoles.add(user, role);
   };

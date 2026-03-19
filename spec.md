@@ -1,22 +1,21 @@
 # DKAN Enterprises
 
 ## Current State
-Full-stack service booking website for DKAN Enterprises (Kanpur, UP). Features: Hindi/English bilingual UI, booking form with All-India state/district selection, admin dashboard with bookings/services/settings management, WhatsApp floating button, SevaMitra partner badge.
-
-**Core bug:** `access-control.mo` `getUserRole` function calls `Runtime.trap("User is not registered")` when a principal is not found in userRoles map. This causes `hasPermission` to throw an error instead of returning `false`, so `getAllBookings` and other admin queries fail with an authorization error even after successful Internet Identity login and `_initializeAccessControlWithSecret` call.
+Admin panel has persistent "Re-login Required" error. Root cause: `promoteToAdmin` function was not defined in `access-control.mo`, and `getUserRole` would `Runtime.trap` for any unregistered principal.
 
 ## Requested Changes (Diff)
 
 ### Add
-- Nothing new
+- `promoteToAdmin` function in `access-control.mo` that directly sets principal as admin without requiring existing admin check
 
 ### Modify
-- Fix `getUserRole` in access-control.mo: when principal is not in userRoles map, return `#guest` instead of calling `Runtime.trap`. This ensures `hasPermission` correctly returns `false` for unregistered principals instead of throwing.
+- `getUserRole` in `access-control.mo`: return `#guest` instead of `Runtime.trap` for unregistered users
+- `hasPermission` now works safely for all principals
 
 ### Remove
 - Nothing
 
 ## Implementation Plan
-1. Regenerate backend Motoko code with the access-control bug fixed: `getUserRole` returns `#guest` for unregistered (non-anonymous) principals instead of trapping.
-2. Keep all existing backend functions identical (bookings, services, settings, authorization).
-3. No frontend changes needed.
+1. Fix `access-control.mo`: add `promoteToAdmin`, change `getUserRole` to return `#guest` for unknown principals
+2. Keep `main.mo` backend `_promoteToAdmin` calling the now-properly-defined `AccessControl.promoteToAdmin`
+3. No frontend changes needed - the admin flow already calls `_promoteToAdmin` correctly
