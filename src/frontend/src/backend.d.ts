@@ -10,7 +10,7 @@ export type Option<T> = Some<T> | None;
 export type Time = bigint;
 export type Result_2 = {
     __kind__: "ok";
-    ok: bigint;
+    ok: Service;
 } | {
     __kind__: "err";
     err: string;
@@ -37,7 +37,7 @@ export interface Service {
 }
 export type Result_1 = {
     __kind__: "ok";
-    ok: Service;
+    ok: Array<BookingRecord>;
 } | {
     __kind__: "err";
     err: string;
@@ -78,6 +78,13 @@ export interface ServiceInput {
     priceRange: string;
     category: string;
 }
+export type Result_3 = {
+    __kind__: "ok";
+    ok: bigint;
+} | {
+    __kind__: "err";
+    err: string;
+};
 export interface UserProfile {
     name: string;
     email: string;
@@ -110,28 +117,24 @@ export enum UserRole {
 }
 export interface backendInterface {
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
-    createBooking(input: BookingInput): Promise<Result_2>;
-    createService(input: ServiceInput): Promise<Result_1>;
+    createBooking(input: BookingInput): Promise<Result_3>;
+    createService(input: ServiceInput): Promise<Result_2>;
+    deleteBooking(id: bigint): Promise<Result>;
     deleteService(id: bigint): Promise<Result>;
-    getAllBookings(): Promise<Array<BookingRecord>>;
+    getAllBookings(): Promise<Result_1>;
     getAllServices(): Promise<Array<Service>>;
     getBookingById(bookingId: bigint): Promise<BookingRecord | null>;
-    getBookingsByDistrict(district: string): Promise<Array<BookingRecord>>;
-    getBookingsByLocation(location: string): Promise<Array<BookingRecord>>;
-    getBookingsByServiceType(serviceType: ServiceType): Promise<Array<BookingRecord>>;
-    getBookingsByState(state: string): Promise<Array<BookingRecord>>;
-    getBookingsByStatus(status: BookingStatus): Promise<Array<BookingRecord>>;
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
     getDistrictsByState(state: string): Promise<Array<string>>;
+    getOwnBookings(): Promise<Array<BookingRecord>>;
     getServiceById(id: bigint): Promise<Service | null>;
     getServicesByCategory(category: string): Promise<Array<Service>>;
     getSettings(): Promise<Settings>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
     isCallerAdmin(): Promise<boolean>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
-    searchBookingsByCustomerName(name: string): Promise<Array<BookingRecord>>;
     searchServicesByName(name: string): Promise<Array<Service>>;
-    updateBookingStatus(bookingId: bigint, newStatus: BookingStatus): Promise<void>;
-    updateSettings(newSettings: Settings): Promise<void>;
+    updateBookingStatus(bookingId: bigint, newStatus: BookingStatus): Promise<Result>;
+    updateSettings(newSettings: Settings): Promise<Result>;
 }

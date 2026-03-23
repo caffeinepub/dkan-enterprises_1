@@ -25,7 +25,6 @@ const queryClient = new QueryClient({
   },
 });
 
-// Root layout with Navbar + Footer
 function RootLayout() {
   return (
     <div className="flex flex-col min-h-screen">
@@ -38,27 +37,20 @@ function RootLayout() {
   );
 }
 
-// Admin page — password gate + identity login required
 function AdminPage() {
   const [authenticated, setAuthenticated] = React.useState(false);
-  const [isAdminReady, setIsAdminReady] = React.useState(false);
 
-  // Re-check when identity changes (after login)
   const handleAuthenticated = React.useCallback(() => {
     setAuthenticated(true);
-    // Give the backend a moment to settle before enabling bookings query
-    // 1500ms delay ensures _initializeAccessControlWithSecret has completed
-    setTimeout(() => setIsAdminReady(true), 1500);
   }, []);
 
   if (!authenticated) {
     return <AdminPasswordGate onAuthenticated={handleAuthenticated} />;
   }
 
-  return <AdminDashboard isAdminReady={isAdminReady} />;
+  return <AdminDashboard isAdminReady={true} />;
 }
 
-// Routes
 const rootRoute = createRootRoute({ component: RootLayout });
 
 const indexRoute = createRoute({
@@ -74,7 +66,6 @@ const adminRoute = createRoute({
 });
 
 const routeTree = rootRoute.addChildren([indexRoute, adminRoute]);
-
 const router = createRouter({ routeTree });
 
 export default function App() {

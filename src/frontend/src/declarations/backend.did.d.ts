@@ -42,9 +42,11 @@ export type BookingStatus = { 'cancelled' : null } |
   { 'inProgress' : null };
 export type Result = { 'ok' : boolean } |
   { 'err' : string };
-export type Result_1 = { 'ok' : Service } |
+export type Result_1 = { 'ok' : Array<BookingRecord> } |
   { 'err' : string };
-export type Result_2 = { 'ok' : bigint } |
+export type Result_2 = { 'ok' : Service } |
+  { 'err' : string };
+export type Result_3 = { 'ok' : bigint } |
   { 'err' : string };
 export interface Service {
   'id' : bigint,
@@ -88,30 +90,26 @@ export type UserRole = { 'admin' : null } |
 export interface _SERVICE {
   '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
-  'createBooking' : ActorMethod<[BookingInput], Result_2>,
-  'createService' : ActorMethod<[ServiceInput], Result_1>,
+  'createBooking' : ActorMethod<[BookingInput], Result_3>,
+  'createService' : ActorMethod<[ServiceInput], Result_2>,
+  'deleteBooking' : ActorMethod<[bigint], Result>,
   'deleteService' : ActorMethod<[bigint], Result>,
-  'getAllBookings' : ActorMethod<[], Array<BookingRecord>>,
+  'getAllBookings' : ActorMethod<[], Result_1>,
   'getAllServices' : ActorMethod<[], Array<Service>>,
   'getBookingById' : ActorMethod<[bigint], [] | [BookingRecord]>,
-  'getBookingsByDistrict' : ActorMethod<[string], Array<BookingRecord>>,
-  'getBookingsByLocation' : ActorMethod<[string], Array<BookingRecord>>,
-  'getBookingsByServiceType' : ActorMethod<[ServiceType], Array<BookingRecord>>,
-  'getBookingsByState' : ActorMethod<[string], Array<BookingRecord>>,
-  'getBookingsByStatus' : ActorMethod<[BookingStatus], Array<BookingRecord>>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
   'getDistrictsByState' : ActorMethod<[string], Array<string>>,
+  'getOwnBookings' : ActorMethod<[], Array<BookingRecord>>,
   'getServiceById' : ActorMethod<[bigint], [] | [Service]>,
   'getServicesByCategory' : ActorMethod<[string], Array<Service>>,
   'getSettings' : ActorMethod<[], Settings>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
-  'searchBookingsByCustomerName' : ActorMethod<[string], Array<BookingRecord>>,
   'searchServicesByName' : ActorMethod<[string], Array<Service>>,
-  'updateBookingStatus' : ActorMethod<[bigint, BookingStatus], undefined>,
-  'updateSettings' : ActorMethod<[Settings], undefined>,
+  'updateBookingStatus' : ActorMethod<[bigint, BookingStatus], Result>,
+  'updateSettings' : ActorMethod<[Settings], Result>,
 }
 export declare const idlService: IDL.ServiceClass;
 export declare const idlInitArgs: IDL.Type[];

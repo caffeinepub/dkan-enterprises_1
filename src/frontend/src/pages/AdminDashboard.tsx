@@ -1,7 +1,6 @@
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useQueryClient } from "@tanstack/react-query";
 import {
   AlertCircle,
   Calendar,
@@ -9,7 +8,6 @@ import {
   ClipboardList,
   Clock,
   Loader2,
-  LogOut,
   MapPin,
   Package,
   Phone,
@@ -24,9 +22,9 @@ import {
 import React, { useState } from "react";
 import { BookingStatus } from "../backend";
 import type { BookingRecord, Settings } from "../backend";
-import { useInternetIdentity } from "../hooks/useInternetIdentity";
 import {
   useCreateService,
+  useDeleteBooking,
   useDeleteService,
   useGetAllBookings,
   useGetAllServices,
@@ -89,6 +87,7 @@ function getStatusKey(status: BookingStatus): string {
 
 function BookingCard({ booking }: { booking: BookingRecord }) {
   const { mutate: updateStatus, isPending } = useUpdateBookingStatus();
+  const { mutate: deleteBooking, isPending: isDeleting } = useDeleteBooking();
   const statusKey = getStatusKey(booking.status);
   const cfg = statusConfig[statusKey] ?? statusConfig.pending;
 
@@ -124,7 +123,7 @@ function BookingCard({ booking }: { booking: BookingRecord }) {
           <select
             value={statusKey}
             onChange={handleStatusChange}
-            disabled={isPending}
+            disabled={isPending || isDeleting}
             className="text-xs border border-border rounded-lg px-2 py-1.5 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-50"
           >
             <option value={BookingStatus.pending}>Pending</option>
@@ -133,6 +132,29 @@ function BookingCard({ booking }: { booking: BookingRecord }) {
             <option value={BookingStatus.completed}>Completed</option>
             <option value={BookingStatus.cancelled}>Cancelled</option>
           </select>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => {
+              if (
+                !window.confirm(
+                  "क्या आप यह बुकिंग डिलीट करना चाहते हैं? / Are you sure you want to delete this booking?",
+                )
+              )
+                return;
+              deleteBooking(booking.id);
+            }}
+            disabled={isDeleting || isPending}
+            className="text-destructive hover:text-destructive hover:bg-destructive/10 shrink-0"
+            title="Delete booking / बुकिंग डिलीट करें"
+            data-ocid="bookings.delete_button"
+          >
+            {isDeleting ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Trash2 className="w-4 h-4" />
+            )}
+          </Button>
         </div>
       </div>
 
@@ -197,7 +219,6 @@ function BookingsTab({ isAdminReady }: { isAdminReady: boolean }) {
     data: bookings,
     isLoading,
     isError,
-    error,
     refetch,
     isFetching,
   } = useGetAllBookings({ enabled: isAdminReady });
@@ -243,12 +264,6 @@ function BookingsTab({ isAdminReady }: { isAdminReady: boolean }) {
   }
 
   if (isError) {
-    const errMsg = error instanceof Error ? error.message : String(error);
-    const isAuthError =
-      errMsg.includes("Unauthorized") ||
-      errMsg.includes("Only admins") ||
-      errMsg.includes("not registered") ||
-      errMsg.includes("Permission denied");
     return (
       <Alert
         variant="destructive"
@@ -256,50 +271,24 @@ function BookingsTab({ isAdminReady }: { isAdminReady: boolean }) {
         data-ocid="bookings.error_state"
       >
         <AlertCircle className="h-4 w-4" />
-        <AlertTitle>
-          {isAuthError
-            ? "लॉगिन फिर से करें / Re-login Required"
-            : "बुकिंग लोड करने में त्रुटि / Error Loading Bookings"}
-        </AlertTitle>
+        <AlertTitle>बुकिंग लोड करने में त्रुटि / Error Loading Bookings</AlertTitle>
         <AlertDescription className="mt-2 space-y-2">
-          {isAuthError ? (
-            <p className="text-sm">
-              Admin access setup हो रहा है। कृपया 10 seconds wait करें और &lsquo;फिर
-              कोशिश करें&rsquo; दबाएं।
-              <br />
-              <span className="text-xs opacity-80">
-                Admin session expired. Please refresh the page and login again.
-              </span>
-            </p>
-          ) : (
-            <p className="text-sm">{errMsg}</p>
-          )}
-          <div className="flex gap-2 mt-2 flex-wrap">
-            {isAuthError && (
-              <Button
-                variant="outline"
-                size="sm"
-                data-ocid="bookings.primary_button"
-                onClick={() => refetch()}
-              >
-                <RefreshCw className="w-4 h-4 mr-2" />
-                फिर कोशिश करें / Try Again
-              </Button>
-            )}
+          <p className="text-sm">
+            बुकिंग लोड नहीं हो सकी। कृपया पुनः प्रयास करें।
+            <br />
+            <span className="text-xs opacity-80">
+              Could not load bookings. Please try again.
+            </span>
+          </p>
+          <div className="flex gap-2 mt-2">
             <Button
               variant="outline"
               size="sm"
-              data-ocid="bookings.secondary_button"
-              onClick={() => {
-                if (isAuthError) {
-                  window.location.reload();
-                } else {
-                  refetch();
-                }
-              }}
+              data-ocid="bookings.primary_button"
+              onClick={() => refetch()}
             >
               <RefreshCw className="w-4 h-4 mr-2" />
-              {isAuthError ? "Refresh Page" : "Retry / पुनः प्रयास"}
+              फिर कोशिश करें / Retry
             </Button>
           </div>
         </AlertDescription>
@@ -658,13 +647,10 @@ export default function AdminDashboard({
   const [activeTab, setActiveTab] = useState<
     "bookings" | "services" | "settings"
   >("bookings");
-  const { clear, identity } = useInternetIdentity();
-  const queryClient = useQueryClient();
 
-  const handleLogout = async () => {
-    await clear();
-    queryClient.clear();
+  const handleLogout = () => {
     sessionStorage.removeItem("admin_authenticated");
+    window.location.reload();
   };
 
   const tabs = [
@@ -698,11 +684,6 @@ export default function AdminDashboard({
               <h1 className="font-bold text-foreground text-sm sm:text-base">
                 Admin Dashboard
               </h1>
-              {identity && (
-                <p className="text-xs text-muted-foreground hidden sm:block">
-                  {identity.getPrincipal().toString().slice(0, 20)}...
-                </p>
-              )}
             </div>
           </div>
           <Button
@@ -712,8 +693,7 @@ export default function AdminDashboard({
             data-ocid="admin.secondary_button"
             className="text-muted-foreground hover:text-foreground"
           >
-            <LogOut className="w-4 h-4 mr-1" />
-            Logout
+            Logout / बाहर निकलें
           </Button>
         </div>
 

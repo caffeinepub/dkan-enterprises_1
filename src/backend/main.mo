@@ -1,19 +1,15 @@
-import Time "mo:core/Time";
 import Map "mo:core/Map";
-import Text "mo:core/Text";
-import Principal "mo:core/Principal";
 import List "mo:core/List";
+import Principal "mo:core/Principal";
+import Time "mo:core/Time";
 import Runtime "mo:core/Runtime";
 import MixinAuthorization "authorization/MixinAuthorization";
 import AccessControl "authorization/access-control";
 
 actor {
-  stable var DKAN_ADMIN_PASSWORD : Text = "admin123";
+  // ================= TYPE DEFINITIONS =================
 
-  let accessControlState = AccessControl.initState();
-  include MixinAuthorization(accessControlState);
-
-  type ServiceType = {
+  public type ServiceType = {
     #acRepair;
     #washingMachineRepair;
     #refrigeratorRepair;
@@ -23,13 +19,13 @@ actor {
     #waterPurifier;
   };
 
-  type TimeSlot = {
+  public type TimeSlot = {
     #morning_9_12;
     #afternoon_12_4;
     #evening_4_7;
   };
 
-  type BookingInput = {
+  public type BookingInput = {
     customerName : Text;
     state : Text;
     district : Text;
@@ -41,7 +37,7 @@ actor {
     timeSlot : TimeSlot;
   };
 
-  type BookingStatus = {
+  public type BookingStatus = {
     #pending;
     #confirmed;
     #inProgress;
@@ -49,7 +45,7 @@ actor {
     #cancelled;
   };
 
-  type BookingRecord = {
+  public type BookingRecord = {
     id : Nat;
     customerName : Text;
     state : Text;
@@ -64,21 +60,7 @@ actor {
     status : BookingStatus;
   };
 
-  public type UserProfile = {
-    name : Text;
-    email : Text;
-  };
-
-  let userProfiles = Map.empty<Principal, UserProfile>();
-  var nextBookingId = 1;
-
-  let bookingOwners = Map.empty<Principal, List.List<Nat>>();
-  let bookings = Map.empty<Nat, BookingRecord>();
-
-  var nextServiceId = 1;
-  let services = Map.empty<Nat, Service>();
-
-  type Service = {
+  public type Service = {
     id : Nat;
     name : Text;
     nameHindi : Text;
@@ -88,7 +70,7 @@ actor {
     category : Text;
   };
 
-  type ServiceInput = {
+  public type ServiceInput = {
     name : Text;
     nameHindi : Text;
     description : Text;
@@ -99,6 +81,11 @@ actor {
 
   public type Result<T, E> = { #ok : T; #err : E };
 
+  public type DistrictData = {
+    state : Text;
+    districts : [Text];
+  };
+
   public type Settings = {
     businessName : Text;
     contactPhone : Text;
@@ -106,6 +93,24 @@ actor {
     businessAddress : Text;
     businessHours : Text;
   };
+
+  public type UserProfile = {
+    name : Text;
+    email : Text;
+  };
+
+  // ================ SYSTEM STATE ===============
+  let accessControlState = AccessControl.initState();
+  include MixinAuthorization(accessControlState);
+
+  let districtMappings = Map.empty<Text, List.List<Text>>();
+  var nextBookingId = 1;
+  var nextServiceId = 1;
+
+  let services = Map.empty<Nat, Service>();
+  let bookings = Map.empty<Nat, BookingRecord>();
+  let bookingOwners = Map.empty<Principal, List.List<Nat>>();
+  let userProfiles = Map.empty<Principal, UserProfile>();
 
   var settings : Settings = {
     businessName = "DKAN Enterprises";
@@ -115,17 +120,7 @@ actor {
     businessHours = "Mon-Sat: 9am-7pm";
   };
 
-  // ================= ADMIN PROMOTION =================
-  // Anyone who provides correct password gets promoted to admin immediately
-  public shared ({ caller }) func _promoteToAdmin(password : Text) : async Bool {
-    if (password == DKAN_ADMIN_PASSWORD) {
-      AccessControl.promoteToAdmin(accessControlState, caller);
-      true;
-    } else {
-      false;
-    };
-  };
-
+  // ================= PUBLIC QUERIES =================
   public query func getSettings() : async Settings {
     settings;
   };
@@ -154,6 +149,14 @@ actor {
     );
   };
 
+  public query func getDistrictsByState(state : Text) : async [Text] {
+    switch (districtMappings.get(state)) {
+      case (null) { [] };
+      case (?districts) { districts.toArray() };
+    };
+  };
+
+  // ================= PUBLIC BOOKING =================
   public shared ({ caller }) func createBooking(input : BookingInput) : async Result<Nat, Text> {
     if (input.customerName.isEmpty()) { return #err("Customer name cannot be empty") };
     if (input.phoneNumber.isEmpty()) { return #err("Phone number cannot be empty") };
@@ -191,105 +194,81 @@ actor {
     #ok(bookingId);
   };
 
+  public query ({ caller }) func getOwnBookings() : async [BookingRecord] {
+    switch (bookingOwners.get(caller)) {
+      case (null) { [] };
+      case (?bookingsList) {
+        bookingsList.toArray().filterMap(
+          func(id) { bookings.get(id) }
+        );
+      };
+    };
+  };
+
   public query ({ caller }) func getCallerUserProfile() : async ?UserProfile {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can view profiles");
+    };
     userProfiles.get(caller);
   };
 
   public query ({ caller }) func getUserProfile(user : Principal) : async ?UserProfile {
-    if (caller != user and not AccessControl.hasPermission(accessControlState, caller, #admin)) {
-      return null;
+    if (caller != user and not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Can only view your own profile");
     };
     userProfiles.get(user);
   };
 
   public shared ({ caller }) func saveCallerUserProfile(profile : UserProfile) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can save profiles");
+    };
     userProfiles.add(caller, profile);
   };
 
-  // =============== ADMIN QUERY FUNCTIONS =============
-  public query ({ caller }) func getAllBookings() : async [BookingRecord] {
-    if (not AccessControl.hasPermission(accessControlState, caller, #admin)) {
+  // =============== ADMIN FUNCTIONS =============
+  public query ({ caller }) func getAllBookings() : async Result<[BookingRecord], Text> {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can view all bookings");
     };
-    bookings.values().toArray();
+    #ok(bookings.values().toArray());
   };
 
-  public query ({ caller }) func searchBookingsByCustomerName(name : Text) : async [BookingRecord] {
-    if (not AccessControl.hasPermission(accessControlState, caller, #admin)) {
-      Runtime.trap("Unauthorized");
-    };
-    bookings.values().toArray().filter(
-      func(b) { b.customerName.toLower().contains(#text(name.toLower())) }
-    );
-  };
-
-  public query ({ caller }) func getBookingsByStatus(status : BookingStatus) : async [BookingRecord] {
-    if (not AccessControl.hasPermission(accessControlState, caller, #admin)) {
-      Runtime.trap("Unauthorized");
-    };
-    bookings.values().toArray().filter(
-      func(b) { b.status == status }
-    );
-  };
-
-  public query ({ caller }) func getBookingsByServiceType(serviceType : ServiceType) : async [BookingRecord] {
-    if (not AccessControl.hasPermission(accessControlState, caller, #admin)) {
-      Runtime.trap("Unauthorized");
-    };
-    bookings.values().toArray().filter(
-      func(b) { b.serviceType == serviceType }
-    );
-  };
-
-  public query ({ caller }) func getBookingsByLocation(location : Text) : async [BookingRecord] {
-    if (not AccessControl.hasPermission(accessControlState, caller, #admin)) {
-      Runtime.trap("Unauthorized");
-    };
-    bookings.values().toArray().filter(
-      func(b) { b.location.toLower().contains(#text(location.toLower())) }
-    );
-  };
-
-  public query ({ caller }) func getBookingsByState(state : Text) : async [BookingRecord] {
-    if (not AccessControl.hasPermission(accessControlState, caller, #admin)) {
-      Runtime.trap("Unauthorized");
-    };
-    bookings.values().toArray().filter(
-      func(b) { b.state.toLower().contains(#text(state.toLower())) }
-    );
-  };
-
-  public query ({ caller }) func getBookingsByDistrict(district : Text) : async [BookingRecord] {
-    if (not AccessControl.hasPermission(accessControlState, caller, #admin)) {
-      Runtime.trap("Unauthorized");
-    };
-    bookings.values().toArray().filter(
-      func(b) { b.district.toLower().contains(#text(district.toLower())) }
-    );
-  };
-
-  public shared ({ caller }) func updateSettings(newSettings : Settings) : async () {
-    if (not AccessControl.hasPermission(accessControlState, caller, #admin)) {
-      Runtime.trap("Unauthorized: Only admins can update settings");
-    };
-    settings := newSettings;
-  };
-
-  public shared ({ caller }) func updateBookingStatus(bookingId : Nat, newStatus : BookingStatus) : async () {
-    if (not AccessControl.hasPermission(accessControlState, caller, #admin)) {
+  public shared ({ caller }) func updateBookingStatus(bookingId : Nat, newStatus : BookingStatus) : async Result<Bool, Text> {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can update booking status");
     };
     switch (bookings.get(bookingId)) {
-      case (null) { Runtime.trap("Booking does not exist") };
+      case (null) { #err("Booking does not exist") };
       case (?booking) {
         bookings.add(bookingId, { booking with status = newStatus });
+        #ok(true);
       };
     };
   };
 
+  public shared ({ caller }) func deleteBooking(id : Nat) : async Result<Bool, Text> {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can delete bookings");
+    };
+    if (not bookings.containsKey(id)) {
+      return #err("Booking does not exist");
+    };
+    bookings.remove(id);
+    #ok(true);
+  };
+
+  public shared ({ caller }) func updateSettings(newSettings : Settings) : async Result<Bool, Text> {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can update settings");
+    };
+    settings := newSettings;
+    #ok(true);
+  };
+
   public shared ({ caller }) func createService(input : ServiceInput) : async Result<Service, Text> {
-    if (not AccessControl.hasPermission(accessControlState, caller, #admin)) {
-      return #err("Unauthorized: Only admins can create services");
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can create services");
     };
     let serviceId = nextServiceId;
     nextServiceId += 1;
@@ -309,8 +288,8 @@ actor {
   };
 
   public shared ({ caller }) func deleteService(id : Nat) : async Result<Bool, Text> {
-    if (not AccessControl.hasPermission(accessControlState, caller, #admin)) {
-      return #err("Unauthorized: Only admins can delete services");
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can delete services");
     };
     if (not services.containsKey(id)) {
       return #err("Service does not exist");
@@ -318,18 +297,4 @@ actor {
     services.remove(id);
     #ok(true);
   };
-
-  public query func getDistrictsByState(state : Text) : async [Text] {
-    switch (districtMappings.get(state)) {
-      case (null) { [] };
-      case (?districts) { districts.toArray() };
-    };
-  };
-
-  public type DistrictData = {
-    state : Text;
-    districts : [Text];
-  };
-
-  let districtMappings = Map.empty<Text, List.List<Text>>();
 };

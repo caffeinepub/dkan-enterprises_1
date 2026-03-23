@@ -21,6 +21,7 @@ module {
     };
   };
 
+  // First principal that calls this function becomes admin, all other principals become users.
   public func initialize(state : AccessControlState, caller : Principal, adminToken : Text, userProvidedToken : Text) {
     if (caller.isAnonymous()) { return };
     switch (state.userRoles.get(caller)) {
@@ -36,18 +37,13 @@ module {
     };
   };
 
-  // Directly promote any principal to admin without requiring existing admin check
-  public func promoteToAdmin(state : AccessControlState, user : Principal) {
-    if (user.isAnonymous()) { return };
-    state.userRoles.add(user, #admin);
-    state.adminAssigned := true;
-  };
-
   public func getUserRole(state : AccessControlState, caller : Principal) : UserRole {
     if (caller.isAnonymous()) { return #guest };
     switch (state.userRoles.get(caller)) {
       case (?role) { role };
-      case (null) { #guest }; // Return guest instead of trapping
+      case (null) {
+        Runtime.trap("User is not registered");
+      };
     };
   };
 

@@ -17,23 +17,12 @@ export function useGetAllBookings(options?: { enabled?: boolean }) {
     queryFn: async () => {
       if (!actor) throw new Error("Actor not available");
       const result = await actor.getAllBookings();
-      return result;
+      if (result.__kind__ === "err") throw new Error(result.err);
+      return result.ok;
     },
     enabled: !!actor && !isFetching && options?.enabled !== false,
-    retry: (failureCount, error) => {
-      const msg = error instanceof Error ? error.message : String(error);
-      // Retry auth errors a few times — admin setup may still be in progress
-      if (
-        msg.includes("Unauthorized") ||
-        msg.includes("Only admins") ||
-        msg.includes("not registered") ||
-        msg.includes("Permission denied")
-      ) {
-        return failureCount < 3;
-      }
-      return failureCount < 3;
-    },
-    retryDelay: (attemptIndex) => Math.min(2000 * (attemptIndex + 1), 8000),
+    retry: 2,
+    retryDelay: 1000,
     staleTime: 0,
     gcTime: 0,
   });
@@ -50,17 +39,13 @@ export function useCreateBooking() {
       if (isFetching)
         throw new Error("Actor is still initializing. Please wait.");
       const result = await actor.createBooking(input);
-      // Handle both { __kind__: "ok", ok: bigint } and { ok: bigint } shapes
       if (result && typeof result === "object") {
         const r = result as Record<string, unknown>;
-        // Variant with __kind__
         if (r.__kind__ === "err") throw new Error(r.err as string);
         if (r.__kind__ === "ok") return r.ok as bigint;
-        // Variant without __kind__ (direct ok/err keys)
         if ("err" in r) throw new Error(r.err as string);
         if ("ok" in r) return r.ok as bigint;
       }
-      // If result is just a bigint (some SDK versions return directly)
       if (typeof result === "bigint") return result;
       throw new Error("Unexpected response from server. Please try again.");
     },
@@ -81,6 +66,23 @@ export function useUpdateBookingStatus() {
     }: { bookingId: bigint; status: BookingStatus }) => {
       if (!actor) throw new Error("Actor not available");
       await actor.updateBookingStatus(bookingId, status);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["allBookings"] });
+    },
+  });
+}
+
+export function useDeleteBooking() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: bigint) => {
+      if (!actor) throw new Error("Actor not available");
+      const result = await actor.deleteBooking(id);
+      if (result.__kind__ === "err") throw new Error(result.err);
+      return result.ok;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["allBookings"] });
@@ -136,24 +138,18 @@ export function useDeleteService() {
 }
 
 export function useInitializeAdmin() {
-  const { actor } = useActor();
-
   return useMutation({
     mutationFn: async (_secret: string) => {
-      // No-op: initialization now handled by _promoteToAdmin directly
-      if (!actor) return;
+      // no-op
     },
   });
 }
 
 export function usePromoteToAdmin() {
-  const { actor } = useActor();
-
   return useMutation({
-    mutationFn: async (password: string) => {
-      if (!actor) throw new Error("Actor not available");
-      const result = await (actor as any)._promoteToAdmin(password);
-      return result as boolean;
+    mutationFn: async (_password: string) => {
+      // no-op — admin access is now password-only on frontend
+      return true;
     },
   });
 }
