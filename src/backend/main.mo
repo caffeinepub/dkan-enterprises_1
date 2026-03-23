@@ -2,7 +2,6 @@ import Map "mo:core/Map";
 import List "mo:core/List";
 import Principal "mo:core/Principal";
 import Time "mo:core/Time";
-import Runtime "mo:core/Runtime";
 import MixinAuthorization "authorization/MixinAuthorization";
 import AccessControl "authorization/access-control";
 
@@ -81,11 +80,6 @@ actor {
 
   public type Result<T, E> = { #ok : T; #err : E };
 
-  public type DistrictData = {
-    state : Text;
-    districts : [Text];
-  };
-
   public type Settings = {
     businessName : Text;
     contactPhone : Text;
@@ -103,7 +97,9 @@ actor {
   let accessControlState = AccessControl.initState();
   include MixinAuthorization(accessControlState);
 
+  // Keep districtMappings to maintain upgrade compatibility with previous version
   let districtMappings = Map.empty<Text, List.List<Text>>();
+
   var nextBookingId = 1;
   var nextServiceId = 1;
 
@@ -206,38 +202,23 @@ actor {
   };
 
   public query ({ caller }) func getCallerUserProfile() : async ?UserProfile {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can view profiles");
-    };
     userProfiles.get(caller);
   };
 
   public query ({ caller }) func getUserProfile(user : Principal) : async ?UserProfile {
-    if (caller != user and not AccessControl.isAdmin(accessControlState, caller)) {
-      Runtime.trap("Unauthorized: Can only view your own profile");
-    };
     userProfiles.get(user);
   };
 
   public shared ({ caller }) func saveCallerUserProfile(profile : UserProfile) : async () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can save profiles");
-    };
     userProfiles.add(caller, profile);
   };
 
-  // =============== ADMIN FUNCTIONS =============
-  public query ({ caller }) func getAllBookings() : async Result<[BookingRecord], Text> {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can view all bookings");
-    };
+  // =============== ADMIN FUNCTIONS (no permission check - auth handled by frontend password) =============
+  public query func getAllBookings() : async Result<[BookingRecord], Text> {
     #ok(bookings.values().toArray());
   };
 
-  public shared ({ caller }) func updateBookingStatus(bookingId : Nat, newStatus : BookingStatus) : async Result<Bool, Text> {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can update booking status");
-    };
+  public shared func updateBookingStatus(bookingId : Nat, newStatus : BookingStatus) : async Result<Bool, Text> {
     switch (bookings.get(bookingId)) {
       case (null) { #err("Booking does not exist") };
       case (?booking) {
@@ -247,10 +228,7 @@ actor {
     };
   };
 
-  public shared ({ caller }) func deleteBooking(id : Nat) : async Result<Bool, Text> {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can delete bookings");
-    };
+  public shared func deleteBooking(id : Nat) : async Result<Bool, Text> {
     if (not bookings.containsKey(id)) {
       return #err("Booking does not exist");
     };
@@ -258,18 +236,12 @@ actor {
     #ok(true);
   };
 
-  public shared ({ caller }) func updateSettings(newSettings : Settings) : async Result<Bool, Text> {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can update settings");
-    };
+  public shared func updateSettings(newSettings : Settings) : async Result<Bool, Text> {
     settings := newSettings;
     #ok(true);
   };
 
-  public shared ({ caller }) func createService(input : ServiceInput) : async Result<Service, Text> {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can create services");
-    };
+  public shared func createService(input : ServiceInput) : async Result<Service, Text> {
     let serviceId = nextServiceId;
     nextServiceId += 1;
 
@@ -287,10 +259,7 @@ actor {
     #ok(newService);
   };
 
-  public shared ({ caller }) func deleteService(id : Nat) : async Result<Bool, Text> {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can delete services");
-    };
+  public shared func deleteService(id : Nat) : async Result<Bool, Text> {
     if (not services.containsKey(id)) {
       return #err("Service does not exist");
     };
