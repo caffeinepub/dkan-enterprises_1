@@ -2,9 +2,12 @@ import { useRouter } from "@tanstack/react-router";
 import { useState } from "react";
 import { useLanguage } from "../hooks/useLanguage";
 
+const DKAN_LOGO = "/assets/uploads/logo-image-2-1.jpg";
+
 export default function Navbar() {
   const { lang, setLang } = useLanguage();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [logoError, setLogoError] = useState(false);
   const router = useRouter();
 
   const isAdmin = router.state.location.pathname === "/admin";
@@ -20,11 +23,18 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
         {/* Logo - DKAN Enterprises */}
         <a href="/" className="flex items-center gap-2">
-          <img
-            src="/assets/uploads/logo-image-1-1.jpg"
-            alt="DKAN Enterprises"
-            className="h-10 md:h-14 w-10 md:w-14 object-cover rounded-full border-2 border-electric/30"
-          />
+          {logoError ? (
+            <div className="h-10 md:h-14 w-10 md:w-14 rounded-full border-2 border-electric/30 bg-electric flex items-center justify-center">
+              <span className="text-white font-bold text-xs">DK</span>
+            </div>
+          ) : (
+            <img
+              src={DKAN_LOGO}
+              alt="DKAN Enterprises"
+              className="h-10 md:h-14 w-10 md:w-14 object-cover rounded-full border-2 border-electric/30"
+              onError={() => setLogoError(true)}
+            />
+          )}
           <div className="flex flex-col">
             <p className="text-white font-bold text-sm font-poppins leading-tight">
               DKAN ENTERPRISES

@@ -1,6 +1,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { AlertCircle, CheckCircle, Loader2, RefreshCw } from "lucide-react";
-import React, { useState } from "react";
+import type React from "react";
+import { useState } from "react";
 import { ServiceType, TimeSlot } from "../backend";
 import type { BookingInput } from "../backend";
 import { useActor } from "../hooks/useActor";
@@ -217,47 +218,9 @@ const initialForm: FormData = {
   problemDescription: "",
 };
 
-function getErrorMessage(error: unknown, lang: "hi" | "en"): string {
-  const msg = error instanceof Error ? error.message : String(error);
-  if (
-    msg.includes("Actor not initialized") ||
-    msg.includes("still initializing") ||
-    msg.includes("Actor not available")
-  ) {
-    return t("booking.bookingActorError", lang);
-  }
-  if (
-    msg.includes("network") ||
-    msg.includes("fetch") ||
-    msg.includes("timeout") ||
-    msg.includes("Failed to fetch")
-  ) {
-    return t("booking.bookingNetworkError", lang);
-  }
-  if (
-    msg.includes("cannot be empty") ||
-    msg.includes("Customer name") ||
-    msg.includes("Phone number") ||
-    msg.includes("State") ||
-    msg.includes("District") ||
-    msg.includes("Location")
-  ) {
-    return lang === "hi"
-      ? `जानकारी अधूरी है: ${msg}`
-      : `Validation error: ${msg}`;
-  }
-  return lang === "hi"
-    ? `${t("booking.bookingError", lang)} (${msg})`
-    : `${t("booking.bookingError", lang)} (${msg})`;
-}
-
 export default function BookingForm() {
   const { lang } = useLanguage();
   const { actor, isFetching: actorFetching } = useActor();
-  const actorError = false;
-  const refetchActor = () => {
-    window.location.reload();
-  };
   const {
     mutate: createBooking,
     isPending,
@@ -267,43 +230,15 @@ export default function BookingForm() {
   const queryClient = useQueryClient();
 
   const [form, setForm] = useState<FormData>(initialForm);
-  // Save a snapshot of form data at submission time for the success screen
   const [submittedData, setSubmittedData] = useState<FormData | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [bookingId, setBookingId] = useState<bigint | null>(null);
-  const [isWaitingForActor, setIsWaitingForActor] = useState(false);
-
-  const actorRef = React.useRef(actor);
-  actorRef.current = actor;
-  const actorFetchingRef = React.useRef(actorFetching);
-  actorFetchingRef.current = actorFetching;
-
-  const isActorReady = !!actor && !actorFetching;
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (field: keyof FormData, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
     if (submitError) setSubmitError(null);
   };
-
-  const doSubmit = React.useCallback(
-    (input: BookingInput, snapshot: FormData) => {
-      createBooking(input, {
-        onSuccess: (id) => {
-          setBookingId(id);
-          setSubmittedData(snapshot); // Save BEFORE resetting form
-          setSubmitError(null);
-          setIsWaitingForActor(false);
-          setForm(initialForm);
-          queryClient.invalidateQueries({ queryKey: ["allBookings"] });
-        },
-        onError: (error) => {
-          setIsWaitingForActor(false);
-          setSubmitError(getErrorMessage(error, lang));
-        },
-      });
-    },
-    [createBooking, lang, queryClient],
-  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -311,6 +246,15 @@ export default function BookingForm() {
 
     if (!form.serviceType || !form.timeSlot) {
       setSubmitError(t("booking.fillAllFields", lang));
+      return;
+    }
+
+    if (!actor) {
+      setSubmitError(
+        lang === "hi"
+          ? "सर्वर से कनेक्शन नहीं है। कृपया 5 सेकंड रुकें और फिर Submit करें।"
+          : "Not connected to server. Please wait 5 seconds and try again.",
+      );
       return;
     }
 
@@ -326,58 +270,51 @@ export default function BookingForm() {
       problemDescription: form.problemDescription.trim(),
     };
 
-    // Snapshot current form values before any async operation
     const snapshot = { ...form };
+    setIsSubmitting(true);
 
-    if (actorRef.current && !actorFetchingRef.current) {
-      doSubmit(input, snapshot);
-      return;
-    }
-
-    setIsWaitingForActor(true);
-    if (!actorFetchingRef.current) refetchActor();
-
-    const maxWait = 30000;
-    const interval = 500;
-    let waited = 0;
-    let extraRefetchDone = false;
-
-    const waitAndSubmit = setInterval(() => {
-      waited += interval;
-      if (actorRef.current && !actorFetchingRef.current) {
-        clearInterval(waitAndSubmit);
-        doSubmit(input, snapshot);
-      } else if (
-        !actorFetchingRef.current &&
-        !actorRef.current &&
-        !extraRefetchDone &&
-        waited > 5000
-      ) {
-        extraRefetchDone = true;
-        refetchActor();
-      } else if (waited >= maxWait) {
-        clearInterval(waitAndSubmit);
-        setIsWaitingForActor(false);
-        setSubmitError(
-          lang === "hi"
-            ? "सर्वर से कनेक्ट नहीं हो पाया। कृपया पेज रिफ्रेश करके दोबारा कोशिश करें।"
-            : "Could not connect to server. Please refresh the page and try again.",
-        );
-      }
-    }, interval);
-  };
-
-  const handleRetry = () => {
-    setSubmitError(null);
-    reset();
-    if (!actor) refetchActor();
+    createBooking(input, {
+      onSuccess: (id) => {
+        setBookingId(id);
+        setSubmittedData(snapshot);
+        setSubmitError(null);
+        setIsSubmitting(false);
+        setForm(initialForm);
+        queryClient.invalidateQueries({ queryKey: ["allBookings"] });
+      },
+      onError: (error) => {
+        setIsSubmitting(false);
+        const msg = error instanceof Error ? error.message : String(error);
+        if (msg.includes("Actor not") || msg.includes("initializing")) {
+          setSubmitError(
+            lang === "hi"
+              ? "सर्वर से कनेक्शन नहीं हो सका। कृपया 10 सेकंड रुककर फिर Submit करें।"
+              : "Could not connect to server. Please wait 10 seconds and try again.",
+          );
+        } else if (
+          msg.includes("network") ||
+          msg.includes("fetch") ||
+          msg.includes("Failed")
+        ) {
+          setSubmitError(
+            lang === "hi"
+              ? "नेटवर्क की समस्या है। इंटरनेट कनेक्शन जांचें और फिर कोशिश करें।"
+              : "Network error. Check your internet connection and try again.",
+          );
+        } else {
+          setSubmitError(
+            lang === "hi"
+              ? `बुकिंग नहीं हो सकी: ${msg}`
+              : `Booking failed: ${msg}`,
+          );
+        }
+      },
+    });
   };
 
   if (isSuccess && submittedData) {
-    // Use submittedData (snapshot) — NOT form (which is already reset to initialForm)
     const d = submittedData;
     const whatsappMessage = `🔔 नई बुकिंग - DKAN Enterprises\n━━━━━━━━━━━━━━━━\n📋 बुकिंग ID: #${bookingId !== null ? String(bookingId) : "N/A"}\n👤 नाम: ${d.customerName}\n📞 मोबाइल: ${d.phoneNumber}\n🔧 सेवा: ${serviceLabels[String(d.serviceType)] || String(d.serviceType)}\n📍 पता: ${d.location}, ${d.district}, ${d.state}\n📅 तारीख: ${d.preferredDate}\n⏰ समय: ${timeSlotLabels[String(d.timeSlot)] || String(d.timeSlot)}\n📝 समस्या: ${d.problemDescription || "(उल्लेख नहीं)"}\n━━━━━━━━━━━━━━━━\nकृपया जल्द सम्पर्क करें।`;
-
     const whatsappUrl = `https://wa.me/918009675645?text=${encodeURIComponent(whatsappMessage)}`;
 
     return (
@@ -398,8 +335,6 @@ export default function BookingForm() {
                 </span>
               </p>
             )}
-
-            {/* Booking summary */}
             <div className="my-4 text-left bg-muted/30 border border-border rounded-xl p-4 text-sm space-y-1">
               <p>
                 <span className="font-semibold">नाम:</span> {d.customerName}
@@ -426,12 +361,9 @@ export default function BookingForm() {
                 </p>
               )}
             </div>
-
             <p className="text-muted-foreground mb-5 text-sm">
               {t("booking.contactSoon", lang)}
             </p>
-
-            {/* WhatsApp Notification Button */}
             <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-xl">
               <p className="text-sm text-green-800 font-medium mb-3">
                 {lang === "hi"
@@ -442,7 +374,6 @@ export default function BookingForm() {
                 href={whatsappUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                data-ocid="booking.whatsapp_button"
                 className="inline-flex items-center gap-2 px-5 py-2.5 bg-green-500 text-white rounded-xl font-semibold hover:bg-green-600 transition-colors text-sm"
               >
                 <svg
@@ -456,7 +387,6 @@ export default function BookingForm() {
                 {lang === "hi" ? "व्हाट्सएप पर भेजें" : "Send on WhatsApp"}
               </a>
             </div>
-
             <button
               type="button"
               onClick={() => {
@@ -479,6 +409,8 @@ export default function BookingForm() {
     "w-full px-4 py-3 border border-border rounded-xl bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm";
   const labelClass = "block text-sm font-semibold text-foreground mb-1.5";
 
+  const isLoading = isPending || isSubmitting;
+
   return (
     <section id="booking" className="py-16 bg-muted/30">
       <div className="max-w-2xl mx-auto px-4">
@@ -489,27 +421,13 @@ export default function BookingForm() {
           <p className="text-muted-foreground">{t("booking.subtitle", lang)}</p>
         </div>
 
-        {actorError && !actor && (
-          <div className="mb-4 flex items-center gap-2 text-xs text-destructive bg-destructive/10 border border-destructive/20 rounded-lg px-3 py-2">
-            <AlertCircle className="w-3 h-3 shrink-0" />
-            <span className="flex-1">
-              {lang === "hi" ? "कनेक्शन में समस्या है" : "Connection issue"}
-            </span>
-            <button
-              type="button"
-              onClick={() => refetchActor()}
-              className="text-xs underline hover:no-underline flex items-center gap-1"
-            >
-              <RefreshCw className="w-3 h-3" />
-              {lang === "hi" ? "फिर कोशिश करें" : "Retry"}
-            </button>
-          </div>
-        )}
-
-        {!isActorReady && !actorError && (
+        {/* Show connecting only briefly while actor loads */}
+        {actorFetching && !actor && (
           <div className="mb-4 flex items-center gap-2 text-xs text-muted-foreground bg-muted/30 border border-border/50 rounded-lg px-3 py-2">
             <Loader2 className="w-3 h-3 animate-spin shrink-0" />
-            {lang === "hi" ? "कनेक्ट हो रहा है..." : "Connecting..."}
+            {lang === "hi"
+              ? "सर्वर से कनेक्ट हो रहा है..."
+              : "Connecting to server..."}
           </div>
         )}
 
@@ -703,7 +621,7 @@ export default function BookingForm() {
                 </p>
                 <button
                   type="button"
-                  onClick={handleRetry}
+                  onClick={() => setSubmitError(null)}
                   className="mt-2 text-xs text-destructive underline flex items-center gap-1 hover:no-underline"
                 >
                   <RefreshCw className="w-3 h-3" />
@@ -715,17 +633,13 @@ export default function BookingForm() {
 
           <button
             type="submit"
-            disabled={isPending || isWaitingForActor}
+            disabled={isLoading}
             className="w-full py-3.5 bg-primary text-primary-foreground rounded-xl font-semibold text-base hover:bg-primary/90 transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
           >
-            {isPending || isWaitingForActor ? (
+            {isLoading ? (
               <>
                 <Loader2 className="w-5 h-5 animate-spin" />
-                {isWaitingForActor
-                  ? lang === "hi"
-                    ? "कनेक्ट हो रहा है..."
-                    : "Connecting..."
-                  : t("booking.submitting", lang)}
+                {lang === "hi" ? "बुकिंग हो रही है..." : "Booking..."}
               </>
             ) : (
               t("booking.submit", lang)

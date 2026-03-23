@@ -1,10 +1,14 @@
+import { useState } from "react";
 import { useLanguage } from "../hooks/useLanguage";
 import { useGetSettings } from "../hooks/useQueries";
 import SevaMitraBadge from "./SevaMitraBadge";
 
+const DKAN_LOGO = "/assets/uploads/logo-image-2-1.jpg";
+
 export default function Footer() {
   const { lang } = useLanguage();
   const { data: settings } = useGetSettings();
+  const [logoError, setLogoError] = useState(false);
 
   const currentYear = new Date().getFullYear();
   const appId = encodeURIComponent(
@@ -20,11 +24,18 @@ export default function Footer() {
           {/* Brand Column */}
           <div className="md:col-span-2">
             <div className="flex items-center gap-3 mb-4">
-              <img
-                src="/assets/uploads/logo-image-1-1.jpg"
-                alt="DKAN Enterprises"
-                className="h-14 w-14 rounded-xl object-contain bg-white p-1 border-2 border-electric"
-              />
+              {logoError ? (
+                <div className="h-14 w-14 rounded-full bg-electric flex items-center justify-center">
+                  <span className="text-white font-bold text-sm">DK</span>
+                </div>
+              ) : (
+                <img
+                  src={DKAN_LOGO}
+                  alt="DKAN Enterprises"
+                  className="h-14 w-14 rounded-full object-cover border-2 border-electric"
+                  onError={() => setLogoError(true)}
+                />
+              )}
               <div>
                 <p className="text-white font-bold font-poppins">
                   DKAN ENTERPRISES
@@ -87,9 +98,9 @@ export default function Footer() {
               {lang === "hi" ? "संपर्क" : "Contact"}
             </h3>
             <ul className="space-y-2 text-sm font-devanagari">
-              <li>📞 {settings?.contactPhone || "+91 90354 30990"}</li>
-              <li>💬 {settings?.whatsappNumber || "+91 90354 30990"}</li>
-              <li>📍 {settings?.businessAddress || "Uttar Pradesh, India"}</li>
+              <li>📞 {settings?.contactPhone || "+91 80096 75645"}</li>
+              <li>💬 {settings?.whatsappNumber || "+91 80096 75645"}</li>
+              <li>📍 {settings?.businessAddress || "Kanpur, Uttar Pradesh"}</li>
               <li>🕐 {settings?.businessHours || "Mon-Sat: 9am-7pm"}</li>
             </ul>
           </div>

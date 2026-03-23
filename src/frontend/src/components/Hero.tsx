@@ -1,30 +1,36 @@
+import { useState } from "react";
 import { useLanguage } from "../hooks/useLanguage";
 import SevaMitraBadge from "./SevaMitraBadge";
 
+const DKAN_LOGO = "/assets/uploads/logo-image-2-1.jpg";
+
 export default function Hero() {
   const { lang } = useLanguage();
+  const [logoError, setLogoError] = useState(false);
 
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-navy">
       {/* Background */}
       <div className="absolute inset-0">
-        <img
-          src="/assets/generated/hero-bg.dim_1440x600.png"
-          alt=""
-          className="w-full h-full object-cover opacity-20"
-        />
         <div className="absolute inset-0 bg-gradient-to-b from-navy/80 via-navy/60 to-navy/90" />
       </div>
 
       <div className="relative z-10 max-w-5xl mx-auto px-4 py-24 text-center">
         {/* Logo - DKAN Enterprises prominent display */}
         <div className="flex justify-center mb-6">
-          <div className="bg-white/95 backdrop-blur-md rounded-full p-3 border border-white/20 shadow-2xl">
-            <img
-              src="/assets/uploads/logo-image-1-1.jpg"
-              alt="DKAN Enterprises"
-              className="h-28 md:h-36 w-28 md:w-36 object-cover rounded-full mx-auto"
-            />
+          <div className="bg-white rounded-full p-3 border-4 border-electric shadow-2xl">
+            {logoError ? (
+              <div className="h-28 md:h-36 w-28 md:w-36 rounded-full bg-electric flex items-center justify-center">
+                <span className="text-white font-bold text-2xl">DK</span>
+              </div>
+            ) : (
+              <img
+                src={DKAN_LOGO}
+                alt="DKAN Enterprises"
+                className="h-28 md:h-36 w-28 md:w-36 object-cover rounded-full"
+                onError={() => setLogoError(true)}
+              />
+            )}
           </div>
         </div>
 
