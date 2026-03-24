@@ -6,7 +6,7 @@ interface AdminPasswordGateProps {
   onAuthenticated: () => void;
 }
 
-const ADMIN_PASSWORD = "admin123";
+const ADMIN_PASSWORD = "Dkan@1993";
 const SESSION_KEY = "admin_authenticated";
 
 export default function AdminPasswordGate({

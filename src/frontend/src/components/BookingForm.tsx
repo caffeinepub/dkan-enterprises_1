@@ -2,11 +2,11 @@ import { useQueryClient } from "@tanstack/react-query";
 import { AlertCircle, CheckCircle, Loader2, RefreshCw } from "lucide-react";
 import type React from "react";
 import { useState } from "react";
-import { ServiceType, TimeSlot } from "../backend";
+import { TimeSlot } from "../backend";
 import type { BookingInput } from "../backend";
 import { useActor } from "../hooks/useActor";
 import { useLanguage } from "../hooks/useLanguage";
-import { useCreateBooking } from "../hooks/useQueries";
+import { useCreateBooking, useGetAllServices } from "../hooks/useQueries";
 import { t } from "../translations";
 
 const UP_DISTRICTS = [
@@ -126,49 +126,7 @@ const STATES = [
   "West Bengal",
 ];
 
-const serviceOptions = [
-  { value: ServiceType.acRepair, labelHi: "एसी मरम्मत", labelEn: "AC Repair" },
-  {
-    value: ServiceType.washingMachineRepair,
-    labelHi: "वाशिंग मशीन मरम्मत",
-    labelEn: "Washing Machine Repair",
-  },
-  {
-    value: ServiceType.refrigeratorRepair,
-    labelHi: "रेफ्रिजरेटर मरम्मत",
-    labelEn: "Refrigerator Repair",
-  },
-  {
-    value: ServiceType.microwaveRepair,
-    labelHi: "माइक्रोवेव मरम्मत",
-    labelEn: "Microwave Repair",
-  },
-  {
-    value: ServiceType.geyserRepair,
-    labelHi: "गीज़र मरम्मत",
-    labelEn: "Geyser Repair",
-  },
-  {
-    value: ServiceType.lcdLedTvRepair,
-    labelHi: "LCD/LED TV मरम्मत",
-    labelEn: "LCD/LED TV Repair",
-  },
-  {
-    value: ServiceType.waterPurifier,
-    labelHi: "वाटर प्यूरीफायर",
-    labelEn: "Water Purifier",
-  },
-];
-
-const serviceLabels: Record<string, string> = {
-  acRepair: "AC Repair / एसी मरम्मत",
-  washingMachineRepair: "Washing Machine / वाशिंग मशीन",
-  refrigeratorRepair: "Refrigerator / रेफ्रिजरेटर",
-  microwaveRepair: "Microwave / माइक्रोवेव",
-  geyserRepair: "Geyser / गीज़र",
-  lcdLedTvRepair: "LCD/LED TV",
-  waterPurifier: "Water Purifier / वाटर प्यूरीफायर",
-};
+// serviceOptions and serviceLabels are now dynamic (built from backend services)
 
 const timeSlotLabels: Record<string, string> = {
   morning_9_12: "सुबह 9–12 बजे",
@@ -200,7 +158,7 @@ interface FormData {
   state: string;
   district: string;
   location: string;
-  serviceType: ServiceType | "";
+  serviceType: string;
   preferredDate: string;
   timeSlot: TimeSlot | "";
   problemDescription: string;
@@ -221,6 +179,11 @@ const initialForm: FormData = {
 export default function BookingForm() {
   const { lang } = useLanguage();
   const { actor, isFetching: actorFetching } = useActor();
+  const { data: services = [], isLoading: servicesLoading } =
+    useGetAllServices();
+  const serviceLabels: Record<string, string> = Object.fromEntries(
+    services.map((s) => [s.name, s.nameHindi]),
+  );
   const {
     mutate: createBooking,
     isPending,
@@ -264,7 +227,7 @@ export default function BookingForm() {
       state: form.state,
       district: form.district,
       location: form.location.trim(),
-      serviceType: form.serviceType as ServiceType,
+      serviceType: form.serviceType,
       preferredDate: form.preferredDate,
       timeSlot: form.timeSlot as TimeSlot,
       problemDescription: form.problemDescription.trim(),
@@ -545,10 +508,17 @@ export default function BookingForm() {
               onChange={(e) => handleChange("serviceType", e.target.value)}
               className={inputClass}
             >
-              <option value="">{t("booking.selectService", lang)}</option>
-              {serviceOptions.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {lang === "hi" ? opt.labelHi : opt.labelEn}
+              <option value="">
+                {servicesLoading
+                  ? lang === "hi"
+                    ? "लोड हो रहा है..."
+                    : "Loading..."
+                  : t("booking.selectService", lang)}
+              </option>
+              {services.map((svc) => (
+                <option key={svc.name} value={svc.name}>
+                  {lang === "hi" ? svc.nameHindi : svc.name} (
+                  {lang === "hi" ? svc.name : svc.nameHindi})
                 </option>
               ))}
             </select>

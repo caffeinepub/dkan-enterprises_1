@@ -13,15 +13,6 @@ export const UserRole = IDL.Variant({
   'user' : IDL.Null,
   'guest' : IDL.Null,
 });
-export const ServiceType = IDL.Variant({
-  'geyserRepair' : IDL.Null,
-  'lcdLedTvRepair' : IDL.Null,
-  'washingMachineRepair' : IDL.Null,
-  'waterPurifier' : IDL.Null,
-  'microwaveRepair' : IDL.Null,
-  'refrigeratorRepair' : IDL.Null,
-  'acRepair' : IDL.Null,
-});
 export const TimeSlot = IDL.Variant({
   'afternoon_12_4' : IDL.Null,
   'morning_9_12' : IDL.Null,
@@ -29,7 +20,7 @@ export const TimeSlot = IDL.Variant({
 });
 export const BookingInput = IDL.Record({
   'customerName' : IDL.Text,
-  'serviceType' : ServiceType,
+  'serviceType' : IDL.Text,
   'district' : IDL.Text,
   'state' : IDL.Text,
   'preferredDate' : IDL.Text,
@@ -70,7 +61,7 @@ export const BookingRecord = IDL.Record({
   'id' : IDL.Nat,
   'customerName' : IDL.Text,
   'status' : BookingStatus,
-  'serviceType' : ServiceType,
+  'serviceType' : IDL.Text,
   'district' : IDL.Text,
   'state' : IDL.Text,
   'preferredTimeSlot' : TimeSlot,
@@ -133,15 +124,6 @@ export const idlFactory = ({ IDL }) => {
     'user' : IDL.Null,
     'guest' : IDL.Null,
   });
-  const ServiceType = IDL.Variant({
-    'geyserRepair' : IDL.Null,
-    'lcdLedTvRepair' : IDL.Null,
-    'washingMachineRepair' : IDL.Null,
-    'waterPurifier' : IDL.Null,
-    'microwaveRepair' : IDL.Null,
-    'refrigeratorRepair' : IDL.Null,
-    'acRepair' : IDL.Null,
-  });
   const TimeSlot = IDL.Variant({
     'afternoon_12_4' : IDL.Null,
     'morning_9_12' : IDL.Null,
@@ -149,7 +131,7 @@ export const idlFactory = ({ IDL }) => {
   });
   const BookingInput = IDL.Record({
     'customerName' : IDL.Text,
-    'serviceType' : ServiceType,
+    'serviceType' : IDL.Text,
     'district' : IDL.Text,
     'state' : IDL.Text,
     'preferredDate' : IDL.Text,
@@ -190,7 +172,7 @@ export const idlFactory = ({ IDL }) => {
     'id' : IDL.Nat,
     'customerName' : IDL.Text,
     'status' : BookingStatus,
-    'serviceType' : ServiceType,
+    'serviceType' : IDL.Text,
     'district' : IDL.Text,
     'state' : IDL.Text,
     'preferredTimeSlot' : TimeSlot,

@@ -80,7 +80,6 @@ const statusConfig: Record<
   },
 };
 
-// BookingStatus is a string enum, so String(status) gives the key directly.
 function getStatusKey(status: BookingStatus): string {
   return String(status);
 }
@@ -212,7 +211,7 @@ function BookingCard({ booking }: { booking: BookingRecord }) {
   );
 }
 
-function BookingsTab({ isAdminReady }: { isAdminReady: boolean }) {
+function BookingsTab() {
   const [activeFilter, setActiveFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const {
@@ -221,7 +220,7 @@ function BookingsTab({ isAdminReady }: { isAdminReady: boolean }) {
     isError,
     refetch,
     isFetching,
-  } = useGetAllBookings({ enabled: isAdminReady });
+  } = useGetAllBookings();
 
   const filterTabs = [
     { key: "all", label: "All / सभी" },
@@ -249,12 +248,12 @@ function BookingsTab({ isAdminReady }: { isAdminReady: boolean }) {
     return bookings.filter((b) => getStatusKey(b.status) === key).length;
   };
 
-  if (!isAdminReady || isLoading) {
+  if (isLoading) {
     return (
-      <div className="space-y-4">
+      <div className="space-y-4" data-ocid="bookings.loading_state">
         <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
           <Loader2 className="w-4 h-4 animate-spin" />
-          <span>एडमिन एक्सेस तैयार हो रहा है... / Preparing admin access...</span>
+          <span>बुकिंग लोड हो रही है... / Loading bookings...</span>
         </div>
         {[1, 2, 3].map((i) => (
           <Skeleton key={i} className="h-48 w-full rounded-xl" />
@@ -450,6 +449,7 @@ function ServicesTab() {
         <form
           onSubmit={handleCreate}
           className="bg-muted/30 border border-border rounded-xl p-4 space-y-3"
+          data-ocid="services.panel"
         >
           <h4 className="font-medium text-foreground">New Service / नई सेवा</h4>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -637,13 +637,7 @@ function SettingsTab() {
   );
 }
 
-interface AdminDashboardProps {
-  isAdminReady?: boolean;
-}
-
-export default function AdminDashboard({
-  isAdminReady = true,
-}: AdminDashboardProps) {
+export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<
     "bookings" | "services" | "settings"
   >("bookings");
@@ -722,9 +716,7 @@ export default function AdminDashboard({
 
       {/* Content */}
       <div className="max-w-6xl mx-auto px-4 py-6">
-        {activeTab === "bookings" && (
-          <BookingsTab isAdminReady={isAdminReady} />
-        )}
+        {activeTab === "bookings" && <BookingsTab />}
         {activeTab === "services" && <ServicesTab />}
         {activeTab === "settings" && <SettingsTab />}
       </div>

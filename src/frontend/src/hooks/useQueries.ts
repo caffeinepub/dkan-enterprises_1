@@ -9,7 +9,7 @@ import type {
 } from "../backend";
 import { useActor } from "./useActor";
 
-export function useGetAllBookings(options?: { enabled?: boolean }) {
+export function useGetAllBookings() {
   const { actor, isFetching } = useActor();
 
   return useQuery<BookingRecord[]>({
@@ -20,7 +20,7 @@ export function useGetAllBookings(options?: { enabled?: boolean }) {
       if (result.__kind__ === "err") throw new Error(result.err);
       return result.ok;
     },
-    enabled: !!actor && !isFetching && options?.enabled !== false,
+    enabled: !!actor && !isFetching,
     retry: 2,
     retryDelay: 1000,
     staleTime: 0,

@@ -12,7 +12,7 @@ import type { Principal } from '@icp-sdk/core/principal';
 
 export interface BookingInput {
   'customerName' : string,
-  'serviceType' : ServiceType,
+  'serviceType' : string,
   'district' : string,
   'state' : string,
   'preferredDate' : string,
@@ -25,7 +25,7 @@ export interface BookingRecord {
   'id' : bigint,
   'customerName' : string,
   'status' : BookingStatus,
-  'serviceType' : ServiceType,
+  'serviceType' : string,
   'district' : string,
   'state' : string,
   'preferredTimeSlot' : TimeSlot,
@@ -65,13 +65,6 @@ export interface ServiceInput {
   'priceRange' : string,
   'category' : string,
 }
-export type ServiceType = { 'geyserRepair' : null } |
-  { 'lcdLedTvRepair' : null } |
-  { 'washingMachineRepair' : null } |
-  { 'waterPurifier' : null } |
-  { 'microwaveRepair' : null } |
-  { 'refrigeratorRepair' : null } |
-  { 'acRepair' : null };
 export interface Settings {
   'businessHours' : string,
   'businessName' : string,

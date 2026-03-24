@@ -38,7 +38,11 @@ function RootLayout() {
 }
 
 function AdminPage() {
-  const [authenticated, setAuthenticated] = React.useState(false);
+  const [authenticated, setAuthenticated] = React.useState(
+    () =>
+      typeof window !== "undefined" &&
+      sessionStorage.getItem("admin_authenticated") === "true",
+  );
 
   const handleAuthenticated = React.useCallback(() => {
     setAuthenticated(true);
@@ -48,7 +52,7 @@ function AdminPage() {
     return <AdminPasswordGate onAuthenticated={handleAuthenticated} />;
   }
 
-  return <AdminDashboard isAdminReady={true} />;
+  return <AdminDashboard />;
 }
 
 const rootRoute = createRootRoute({ component: RootLayout });

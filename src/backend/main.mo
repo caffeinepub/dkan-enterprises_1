@@ -8,16 +8,6 @@ import AccessControl "authorization/access-control";
 actor {
   // ================= TYPE DEFINITIONS =================
 
-  public type ServiceType = {
-    #acRepair;
-    #washingMachineRepair;
-    #refrigeratorRepair;
-    #microwaveRepair;
-    #geyserRepair;
-    #lcdLedTvRepair;
-    #waterPurifier;
-  };
-
   public type TimeSlot = {
     #morning_9_12;
     #afternoon_12_4;
@@ -29,7 +19,7 @@ actor {
     state : Text;
     district : Text;
     phoneNumber : Text;
-    serviceType : ServiceType;
+    serviceType : Text;
     problemDescription : Text;
     location : Text;
     preferredDate : Text;
@@ -50,7 +40,7 @@ actor {
     state : Text;
     district : Text;
     phoneNumber : Text;
-    serviceType : ServiceType;
+    serviceType : Text;
     problemDescription : Text;
     location : Text;
     preferredDate : Text;
@@ -94,11 +84,12 @@ actor {
   };
 
   // ================ SYSTEM STATE ===============
+  // Keep old stable vars for upgrade compatibility (not used for auth)
   let accessControlState = AccessControl.initState();
   include MixinAuthorization(accessControlState);
 
-  // Keep districtMappings to maintain upgrade compatibility with previous version
   let districtMappings = Map.empty<Text, List.List<Text>>();
+  let userProfiles = Map.empty<Principal, UserProfile>();
 
   var nextBookingId = 1;
   var nextServiceId = 1;
@@ -106,7 +97,6 @@ actor {
   let services = Map.empty<Nat, Service>();
   let bookings = Map.empty<Nat, BookingRecord>();
   let bookingOwners = Map.empty<Principal, List.List<Nat>>();
-  let userProfiles = Map.empty<Principal, UserProfile>();
 
   var settings : Settings = {
     businessName = "DKAN Enterprises";
@@ -115,6 +105,91 @@ actor {
     businessAddress = "Kanpur, Uttar Pradesh";
     businessHours = "Mon-Sat: 9am-7pm";
   };
+
+  // Seed default services
+  let _seed1 : Service = {
+    id = nextServiceId;
+    name = "AC Repair";
+    nameHindi = "एसी मरम्मत";
+    description = "AC repair and servicing";
+    descriptionHindi = "एसी मरम्मत और सर्विसिंग";
+    priceRange = "₹299-₹1999";
+    category = "Appliance";
+  };
+  services.add(nextServiceId, _seed1);
+  nextServiceId += 1;
+
+  let _seed2 : Service = {
+    id = nextServiceId;
+    name = "Mobile Repair";
+    nameHindi = "मोबाइल मरम्मत";
+    description = "Mobile phone repair";
+    descriptionHindi = "मोबाइल फोन मरम्मत";
+    priceRange = "₹199-₹2999";
+    category = "Electronics";
+  };
+  services.add(nextServiceId, _seed2);
+  nextServiceId += 1;
+
+  let _seed3 : Service = {
+    id = nextServiceId;
+    name = "Laptop Repair";
+    nameHindi = "लैपटॉप मरम्मत";
+    description = "Laptop repair and servicing";
+    descriptionHindi = "लैपटॉप मरम्मत और सर्विसिंग";
+    priceRange = "₹499-₹4999";
+    category = "Electronics";
+  };
+  services.add(nextServiceId, _seed3);
+  nextServiceId += 1;
+
+  let _seed4 : Service = {
+    id = nextServiceId;
+    name = "Chip Level Repair";
+    nameHindi = "चिप लेवल मरम्मत";
+    description = "Chip level board repair";
+    descriptionHindi = "चिप लेवल बोर्ड मरम्मत";
+    priceRange = "₹999-₹5999";
+    category = "Electronics";
+  };
+  services.add(nextServiceId, _seed4);
+  nextServiceId += 1;
+
+  let _seed5 : Service = {
+    id = nextServiceId;
+    name = "Refrigerator Repair";
+    nameHindi = "रेफ्रिजरेटर मरम्मत";
+    description = "Fridge repair and servicing";
+    descriptionHindi = "फ्रिज मरम्मत और सर्विसिंग";
+    priceRange = "₹299-₹1999";
+    category = "Appliance";
+  };
+  services.add(nextServiceId, _seed5);
+  nextServiceId += 1;
+
+  let _seed6 : Service = {
+    id = nextServiceId;
+    name = "Washing Machine Repair";
+    nameHindi = "वाशिंग मशीन मरम्मत";
+    description = "Washing machine repair";
+    descriptionHindi = "वाशिंग मशीन मरम्मत";
+    priceRange = "₹299-₹1999";
+    category = "Appliance";
+  };
+  services.add(nextServiceId, _seed6);
+  nextServiceId += 1;
+
+  let _seed7 : Service = {
+    id = nextServiceId;
+    name = "LED/LCD TV Repair";
+    nameHindi = "एलईडी/एलसीडी टीवी मरम्मत";
+    description = "TV repair and servicing";
+    descriptionHindi = "टीवी मरम्मत और सर्विसिंग";
+    priceRange = "₹399-₹2999";
+    category = "Electronics";
+  };
+  services.add(nextServiceId, _seed7);
+  nextServiceId += 1;
 
   // ================= PUBLIC QUERIES =================
   public query func getSettings() : async Settings {
@@ -133,26 +208,8 @@ actor {
     services.get(id);
   };
 
-  public query func getServicesByCategory(category : Text) : async [Service] {
-    services.values().toArray().filter(
-      func(service) { service.category == category }
-    );
-  };
-
-  public query func searchServicesByName(name : Text) : async [Service] {
-    services.values().toArray().filter(
-      func(service) { service.name.toLower().contains(#text(name.toLower())) }
-    );
-  };
-
-  public query func getDistrictsByState(state : Text) : async [Text] {
-    switch (districtMappings.get(state)) {
-      case (null) { [] };
-      case (?districts) { districts.toArray() };
-    };
-  };
-
   // ================= PUBLIC BOOKING =================
+
   public shared ({ caller }) func createBooking(input : BookingInput) : async Result<Nat, Text> {
     if (input.customerName.isEmpty()) { return #err("Customer name cannot be empty") };
     if (input.phoneNumber.isEmpty()) { return #err("Phone number cannot be empty") };
@@ -190,30 +247,7 @@ actor {
     #ok(bookingId);
   };
 
-  public query ({ caller }) func getOwnBookings() : async [BookingRecord] {
-    switch (bookingOwners.get(caller)) {
-      case (null) { [] };
-      case (?bookingsList) {
-        bookingsList.toArray().filterMap(
-          func(id) { bookings.get(id) }
-        );
-      };
-    };
-  };
-
-  public query ({ caller }) func getCallerUserProfile() : async ?UserProfile {
-    userProfiles.get(caller);
-  };
-
-  public query ({ caller }) func getUserProfile(user : Principal) : async ?UserProfile {
-    userProfiles.get(user);
-  };
-
-  public shared ({ caller }) func saveCallerUserProfile(profile : UserProfile) : async () {
-    userProfiles.add(caller, profile);
-  };
-
-  // =============== ADMIN FUNCTIONS (no permission check - auth handled by frontend password) =============
+  // =============== ADMIN FUNCTIONS (no auth checks - password verified on frontend) =============
   public query func getAllBookings() : async Result<[BookingRecord], Text> {
     #ok(bookings.values().toArray());
   };
@@ -265,5 +299,14 @@ actor {
     };
     services.remove(id);
     #ok(true);
+  };
+
+  // Keep old public functions that frontend bindings may reference
+  public query ({ caller }) func getCallerUserProfile() : async ?UserProfile {
+    userProfiles.get(caller);
+  };
+
+  public shared ({ caller }) func saveCallerUserProfile(profile : UserProfile) : async () {
+    userProfiles.add(caller, profile);
   };
 };

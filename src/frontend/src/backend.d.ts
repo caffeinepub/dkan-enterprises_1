@@ -17,7 +17,7 @@ export type Result_2 = {
 };
 export interface BookingInput {
     customerName: string;
-    serviceType: ServiceType;
+    serviceType: string;
     district: string;
     state: string;
     preferredDate: string;
@@ -46,7 +46,7 @@ export interface BookingRecord {
     id: bigint;
     customerName: string;
     status: BookingStatus;
-    serviceType: ServiceType;
+    serviceType: string;
     district: string;
     state: string;
     preferredTimeSlot: TimeSlot;
@@ -95,15 +95,6 @@ export enum BookingStatus {
     completed = "completed",
     confirmed = "confirmed",
     inProgress = "inProgress"
-}
-export enum ServiceType {
-    geyserRepair = "geyserRepair",
-    lcdLedTvRepair = "lcdLedTvRepair",
-    washingMachineRepair = "washingMachineRepair",
-    waterPurifier = "waterPurifier",
-    microwaveRepair = "microwaveRepair",
-    refrigeratorRepair = "refrigeratorRepair",
-    acRepair = "acRepair"
 }
 export enum TimeSlot {
     afternoon_12_4 = "afternoon_12_4",
